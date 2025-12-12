@@ -155,14 +155,17 @@ const socialImageURL = new URL(image, Astro.site).href;
   
   :global(.pswp__custom-caption) {
     position: absolute;
-    /* Lift it up so it's not stuck to the very edge */
-    bottom: 30px; 
+    
+    /* FIX: Anchor it to the very bottom (No more gap) */
+    bottom: 0; 
     left: 0;
     width: 100%;
     
-    /* Taller gradient to ensure text is readable even if it floats */
-    background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 50%, transparent 100%);
-    padding: 6rem 1.5rem 2rem 1.5rem; 
+    /* Taller gradient so it feels premium */
+    background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 50%, transparent 100%);
+    
+    /* FIX: Use Padding to lift the text up, instead of moving the whole box */
+    padding: 6rem 1.5rem 3rem 1.5rem; 
     
     text-align: center;
     color: rgba(255, 255, 255, 0.98);
@@ -170,10 +173,10 @@ const socialImageURL = new URL(image, Astro.site).href;
     z-index: 2000;
   }
   
-  /* CAPTION TITLE (Bigger!) */
+  /* CAPTION TITLE */
   :global(.pswp__custom-caption .caption-title) {
     font-family: var(--font-serif);
-    font-size: 1.75rem; /* Much bigger */
+    font-size: 1.75rem; 
     font-weight: 500;
     line-height: 1.1;
     display: block;
@@ -184,7 +187,7 @@ const socialImageURL = new URL(image, Astro.site).href;
   /* EXIF DATA */
   :global(.pswp__custom-caption small) {
     font-family: var(--font-mono);
-    font-size: 0.95rem; /* Bigger */
+    font-size: 0.95rem; 
     color: rgba(255, 255, 255, 0.75);
     display: block;
     letter-spacing: 0.05em;
