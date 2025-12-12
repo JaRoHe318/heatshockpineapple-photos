@@ -48,7 +48,7 @@ const randomStream = allPhotos
   <section class="collections-nav">
     <div class="nav-grid">
       {collections.map((col) => (
-        <a href={`/collections/${col.name}`} class="nav-card">
+        <a href={`/gallery/${col.name}`} class="nav-card">
           <div class="nav-img-box">
             <img src={col.cover} alt={col.name} loading="lazy" />
             <div class="nav-overlay">
@@ -99,7 +99,7 @@ const randomStream = allPhotos
     font-size: 1.1rem;
   }
 
-  /* --- COLLECTIONS NAV --- */
+  /* --- Gallery NAV --- */
   .collections-nav {
     margin-bottom: 5rem;
   }
