@@ -1,7 +1,8 @@
 ---
-import BaseLayout from "../layouts/BaseLayout.astro";
-import PhotoCard from "../components/PhotoCard.astro";
-import photosData from "../data/photos.json";
+// FIX: Add extra "../" to all these imports
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PhotoCard from "../../components/PhotoCard.astro";
+import photosData from "../../data/photos.json";
 
 const allPhotos = photosData.photos || [];
 
