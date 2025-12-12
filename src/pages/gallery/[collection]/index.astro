@@ -60,7 +60,7 @@ const displayTitle = collection.charAt(0).toUpperCase() + collection.slice(1);
       <div class="album-grid">
         {albumCards.map((alb) => (
           /* LINK TO SUB-PAGE */
-          <a href={`/collections/${collection}/${alb.name}`} class="album-card">
+          <a href={`/gallery/${collection}/${alb.name}`} class="album-card">
             <div class="album-cover">
               <img src={alb.cover} alt={alb.name} loading="lazy" />
               <div class="album-overlay"><span>View Album →</span></div>
