@@ -6,7 +6,7 @@ const currentYear = new Date().getFullYear();
 <footer class="site-footer">
   <div class="sequence-tape" aria-hidden="true">
     <div class="scrolling-text">
-      MSKGPAVGIDLGTTYSCVGVFQHGKVEIIANDQGNRTTPSYVAFTDTERLIGDAAKNQVAMNPTNTVFDAKRLIGRRFDDAVVQSDMKHWPFMVVNDAGRPKVQVEYKGETKSFYPEEVSSMVLTKMKEIAEAYL... MSKGPAVGIDLGTTYSCVGVFQHGKVEIIANDQGNRTTPSYVAFTDTERLIGDAAKNQVAMNPTNTVFDAKRLIGRRFDDAVVQSDMKHWPFMVVNDAGRPKVQVEYKGETKSFYPEEVSSMVLTKMKEIAEAYL...
+      OPTICS · REFRACTION · APERTURE · DIFFRACTION · CHROMATIC ABERRATION · FOCAL LENGTH · DEPTH OF FIELD · CIRCLE OF CONFUSION · HYPERFOCAL DISTANCE · BOKEH · SHUTTER ANGLE · ISO INVARIANCE · DYNAMIC RANGE · OPTICS · REFRACTION · APERTURE · DIFFRACTION · CHROMATIC ABERRATION · FOCAL LENGTH · DEPTH OF FIELD · CIRCLE OF CONFUSION · HYPERFOCAL DISTANCE · BOKEH · SHUTTER ANGLE · ISO INVARIANCE · DYNAMIC RANGE
     </div>
   </div>
 
@@ -43,11 +43,16 @@ const currentYear = new Date().getFullYear();
   .scrolling-text {
     white-space: nowrap;
     font-size: 0.7rem;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.15em; /* Increased slightly for readability */
     color: var(--accent-primary);
-    animation: scroll 120s linear infinite;
+    /* Slower animation for a more relaxed, thoughtful feel */
+    animation: scroll 60s linear infinite; 
   }
 
+  /* TIP: If the text is too short, the loop might "jump". 
+     The text in the HTML above is repeated once to ensure it fills 
+     most screens before the animation loops.
+  */
   @keyframes scroll {
     0% { transform: translateX(0); }
     100% { transform: translateX(-50%); }
