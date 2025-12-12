@@ -1,0 +1,230 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import photosData from "../data/photos.json";
+
+// 1. Get 5 random photos for the "Film Strip"
+const allPhotos = photosData.photos || [];
+const randomStrip = allPhotos
+  .sort(() => 0.5 - Math.random())
+  .slice(0, 5);
+---
+
+<BaseLayout title="Resources" description="Gear, software, and inspiration.">
+  
+  <header class="page-header">
+    <h1 class="page-title">Resources.</h1>
+    <p class="page-desc">The tools and inputs that shape the output.</p>
+  </header>
+
+  <section class="film-strip-container">
+    <div class="film-strip">
+      {randomStrip.map((photo, index) => (
+        <div class="film-frame">
+          <img src={photo.src} alt="" loading="lazy" />
+          <span class="frame-number">{index + 1}A</span>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <div class="grid-layout">
+    
+    <section>
+      <h2 class="section-title">01 // Gear</h2>
+      <ul class="resource-list">
+        <li>
+          <span class="item">Canon EOS M6 Mark II</span>
+          <span class="detail">Primary Body</span>
+        </li>
+        <li>
+          <span class="item">EF-M 32mm f/1.4</span>
+          <span class="detail">Portrait / Sharpness</span>
+        </li>
+        <li>
+          <span class="item">EF-M 22mm f/2</span>
+          <span class="detail">Street / Daily</span>
+        </li>
+        <li>
+          <span class="item">Laowa 65mm 2x Macro</span>
+          <span class="detail">Lab Work</span>
+        </li>
+      </ul>
+    </section>
+
+    <section>
+      <h2 class="section-title">02 // Software</h2>
+      <ul class="resource-list">
+        <li>
+          <span class="item">Lightroom Classic</span>
+          <span class="detail">Catalog & Color</span>
+        </li>
+        <li>
+          <span class="item">Photoshop</span>
+          <span class="detail">Retouching</span>
+        </li>
+        <li>
+          <span class="item">Topaz DeNoise</span>
+          <span class="detail">High ISO Rescue</span>
+        </li>
+        <li>
+          <a href="https://astro.build" class="link-item">Astro</a>
+          <span class="detail">Web Framework</span>
+        </li>
+      </ul>
+    </section>
+
+    <section>
+      <h2 class="section-title">03 // Reading</h2>
+      <ul class="resource-list">
+        <li>
+          <span class="item">The Nature of Photographs</span>
+          <span class="detail">Stephen Shore</span>
+        </li>
+        <li>
+          <span class="item">Ways of Seeing</span>
+          <span class="detail">John Berger</span>
+        </li>
+        <li>
+          <span class="item">On Photography</span>
+          <span class="detail">Susan Sontag</span>
+        </li>
+      </ul>
+    </section>
+
+  </div>
+
+</BaseLayout>
+
+<style>
+  .page-header {
+    margin-bottom: 4rem;
+  }
+  
+  .page-title {
+    font-family: var(--font-serif);
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    margin-bottom: 1rem;
+    color: var(--text-main);
+  }
+
+  .page-desc {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    max-width: 40ch;
+  }
+
+  /* --- FILM STRIP --- */
+  .film-strip-container {
+    margin: 4rem 0 6rem 0;
+    width: 100%;
+    overflow: hidden; /* Hide overflow if frames stick out */
+  }
+
+  .film-strip {
+    display: flex;
+    gap: 2px; /* Tiny gap between frames */
+    background: #000; /* Black film backing */
+    padding: 10px 0;
+    overflow-x: auto; /* Scrollable on mobile */
+    scrollbar-width: none; /* Hide scrollbar Firefox */
+  }
+  .film-strip::-webkit-scrollbar { display: none; /* Hide scrollbar Chrome */ }
+
+  .film-frame {
+    flex: 0 0 200px; /* Fixed width frames */
+    height: 150px;
+    position: relative;
+    background: #111;
+    overflow: hidden;
+  }
+
+  .film-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.8;
+    filter: grayscale(100%); /* B&W Contact sheet look */
+    transition: all 0.3s ease;
+  }
+
+  .film-frame:hover img {
+    opacity: 1;
+    filter: grayscale(0%);
+  }
+
+  .frame-number {
+    position: absolute;
+    bottom: 4px;
+    right: 6px;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    color: #ffd700; /* Film yellow text */
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    opacity: 0.7;
+  }
+
+  /* --- LISTS --- */
+  .grid-layout {
+    display: grid;
+    gap: 4rem;
+  }
+
+  @media (min-width: 768px) {
+    .grid-layout {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .grid-layout {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .section-title {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1rem;
+  }
+
+  .resource-list {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .resource-list li {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .item {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-main);
+  }
+  
+  .link-item {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-main);
+    text-decoration: underline;
+    text-decoration-color: var(--border);
+    text-underline-offset: 3px;
+  }
+  
+  .link-item:hover { text-decoration-color: var(--text-main); }
+
+  .detail {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+</style>

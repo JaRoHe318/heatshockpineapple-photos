@@ -1,0 +1,114 @@
+<canvas id="microscope-canvas"></canvas>
+
+<script>
+  const canvas = document.getElementById('microscope-canvas') as HTMLCanvasElement | null;
+
+  if (canvas) {
+    const ctx = canvas.getContext('2d');
+    
+    // FIX 1: Initialize with explicit types so TypeScript knows they are numbers
+    let width: number = window.innerWidth;
+    let height: number = window.innerHeight;
+
+    // FIX 2: Define the Class BEFORE creating the array so we can use the type
+    class Particle {
+      x: number;
+      y: number;
+      vx: number;
+      vy: number;
+      size: number;
+
+      constructor() {
+        this.x = Math.random() * width;
+        this.y = Math.random() * height;
+        // Slow biological drift
+        this.vx = (Math.random() - 0.5) * 0.3; 
+        this.vy = (Math.random() - 0.5) * 0.3;
+        this.size = Math.random() * 2 + 1;
+      }
+
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+
+        // Gentle bounce off edges
+        if (this.x < 0 || this.x > width) this.vx *= -1;
+        if (this.y < 0 || this.y > height) this.vy *= -1;
+      }
+
+      draw() {
+        if (!ctx) return;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(45, 90, 69, 0.2)'; // Forest Green, very subtle
+        ctx.fill();
+      }
+    }
+
+    // FIX 3: Explicitly say this is an array of Particle objects
+    const particles: Particle[] = [];
+    const particleCount = 40;
+    const connectionDistance = 150;
+
+    const resize = () => {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+    };
+
+    const init = () => {
+      resize();
+      for (let i = 0; i < particleCount; i++) {
+        particles.push(new Particle());
+      }
+      animate();
+    };
+
+    const animate = () => {
+      if (!ctx) return;
+      ctx.clearRect(0, 0, width, height);
+
+      particles.forEach((p, index) => {
+        p.update();
+        p.draw();
+
+        // Draw connections (The "Network" effect)
+        for (let j = index + 1; j < particles.length; j++) {
+          const p2 = particles[j];
+          const dx = p.x - p2.x;
+          const dy = p.y - p2.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < connectionDistance) {
+            ctx.beginPath();
+            // Alpha fades based on distance
+            ctx.strokeStyle = `rgba(45, 90, 69, ${0.1 - dist/connectionDistance * 0.1})`;
+            ctx.lineWidth = 1;
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+          }
+        }
+      });
+
+      requestAnimationFrame(animate);
+    };
+
+    window.addEventListener('resize', resize);
+    init();
+  }
+</script>
+
+<style>
+  #microscope-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -2; /* Behind everything */
+    pointer-events: none;
+    opacity: 0.6; 
+  }
+</style>

@@ -1,5 +1,7 @@
-// @ts-check
-import { defineConfig } from 'astro/config';
+import { defineConfig } from "astro/config";
 
-// https://astro.build/config
-export default defineConfig({});
+export default defineConfig({
+  site: "https://photos.heatshockpineapple.com",
+  // IMPORTANT: no `base: '/code'` here.
+  // If you see a base property, delete it or set it to '/'.
+});

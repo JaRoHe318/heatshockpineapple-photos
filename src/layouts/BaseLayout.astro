@@ -1,0 +1,194 @@
+---
+import { ClientRouter } from 'astro:transitions'; 
+import "../styles/global.css";
+/* 1. NEW: Import PhotoSwipe Styles */
+import 'photoswipe/style.css';
+
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+import MicroscopeBackground from "../components/MicroscopeBackground.astro";
+
+interface Props {
+  title: string;
+  description?: string;
+  image?: string;
+  canonicalURL?: string;
+  type?: string;
+}
+
+const {
+  title,
+  description = "Photography by J. R. Hernandez",
+  image = "/social-preview.png",
+  canonicalURL = new URL(Astro.url.pathname, Astro.site).href,
+  type = "website"
+} = Astro.props;
+
+const siteName = "Heat Shock Pineapple · Photos";
+const fullTitle = title.includes(siteName) ? title : `${title} · ${siteName}`;
+const socialImageURL = new URL(image, Astro.site).href;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <ClientRouter />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="title" content={fullTitle} />
+    <meta name="description" content={description} />
+    <meta name="author" content="Jason Hernandez" />
+    <link rel="canonical" href={canonicalURL} />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <meta property="og:type" content={type} />
+    <meta property="og:image" content={socialImageURL} />
+
+    <script is:inline>
+        // 1. The function to set the theme
+        const setTheme = () => {
+        const stored = localStorage.getItem("theme");
+        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const theme = stored || (prefersDark ? "dark" : "light");
+        document.documentElement.setAttribute("data-theme", theme);
+        };
+
+        // 2. Run on initial load
+        setTheme();
+
+        // 3. Run on every navigation swap (This fixes the reset bug)
+        document.addEventListener("astro:after-swap", setTheme);
+    </script>
+  </head>
+  <body>
+    <MicroscopeBackground />
+
+<div class="layout-wrapper">
+      <Header />
+      
+      <main id="main-gallery" class="pswp-gallery" data-pagefind-body>
+        <slot />
+      </main>
+      
+      <Footer />
+    </div>
+
+    <script>
+      import PhotoSwipeLightbox from 'photoswipe/lightbox';
+      import PhotoSwipe from 'photoswipe';
+
+      let lightbox;
+
+      function initLightbox() {
+        lightbox = new PhotoSwipeLightbox({
+          gallery: '#main-gallery', // Target our main container
+          children: 'a.pswp-link',  // Target the links in PhotoCard.astro
+          pswpModule: PhotoSwipe,
+          
+          // Pro Configuration
+          bgOpacity: 0.95,
+          showHideOpacity: true,
+          wheelToZoom: true,
+          
+          // Add padding for captions so they don't overlap the image
+          paddingFn: (viewportSize) => {
+            return { top: 0, bottom: 0, left: 0, right: 0 }
+          }
+        });
+
+        // --- Custom Caption Logic ---
+        lightbox.on('uiRegister', function() {
+          lightbox.pswp.ui.registerElement({
+            name: 'custom-caption',
+            order: 9,
+            isButton: false,
+            appendTo: 'root',
+            html: '',
+            onInit: (el, pswp) => {
+              lightbox.pswp.on('change', () => {
+                const currSlide = lightbox.pswp.currSlide;
+                if (currSlide && currSlide.data.element) {
+                  // Grab the hidden caption content from the PhotoCard
+                  const hiddenCaption = currSlide.data.element.parentNode.querySelector('.hidden-caption');
+                  if (hiddenCaption) {
+                    el.innerHTML = hiddenCaption.innerHTML;
+                  } else {
+                    el.innerHTML = '';
+                  }
+                }
+              });
+            }
+          });
+        });
+
+        lightbox.init();
+      }
+
+      // Initialize on every page load (handles initial load + navigation)
+      document.addEventListener('astro:page-load', () => {
+        // Clean up previous instance if it exists
+        if (lightbox) {
+          lightbox.destroy();
+          lightbox = null;
+        }
+        initLightbox();
+      });
+    </script>
+  </body>
+</html>
+
+<style>
+  .layout-wrapper {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  @media (min-width: 768px) { .layout-wrapper { padding: 0 40px; } }
+
+  /* --- CINEMATIC LIGHTBOX CAPTION --- */
+  
+  :global(.pswp__custom-caption) {
+    position: absolute;
+    /* Lift it up so it's not stuck to the very edge */
+    bottom: 30px; 
+    left: 0;
+    width: 100%;
+    
+    /* Taller gradient to ensure text is readable even if it floats */
+    background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 50%, transparent 100%);
+    padding: 6rem 1.5rem 2rem 1.5rem; 
+    
+    text-align: center;
+    color: rgba(255, 255, 255, 0.98);
+    pointer-events: none;
+    z-index: 2000;
+  }
+  
+  /* CAPTION TITLE (Bigger!) */
+  :global(.pswp__custom-caption .caption-title) {
+    font-family: var(--font-serif);
+    font-size: 1.75rem; /* Much bigger */
+    font-weight: 500;
+    line-height: 1.1;
+    display: block;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 15px rgba(0,0,0,0.8);
+  }
+  
+  /* EXIF DATA */
+  :global(.pswp__custom-caption small) {
+    font-family: var(--font-mono);
+    font-size: 0.95rem; /* Bigger */
+    color: rgba(255, 255, 255, 0.75);
+    display: block;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    text-shadow: 0 1px 5px rgba(0,0,0,0.8);
+  }
+</style>

@@ -1,0 +1,25 @@
+.
+├── astro.config.mjs
+├── package-lock.json
+├── package.json
+├── photos_tree.txt
+├── public
+│   ├── favicon.svg
+│   ├── files
+│   └── images
+│       ├── me
+│       ├── projects
+│       └── ui
+├── README.md
+├── scripts
+├── src
+│   ├── components
+│   ├── content
+│   ├── data
+│   ├── layouts
+│   ├── pages
+│   │   └── index.astro
+│   └── styles
+└── tsconfig.json
+
+15 directories, 8 files

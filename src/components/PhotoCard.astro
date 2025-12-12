@@ -1,0 +1,100 @@
+---
+interface Props {
+  photo: {
+    src: string;
+    alt: string;
+    caption?: string;
+    exif?: string;
+    width?: number;
+    height?: number;
+    full?: string;
+  };
+}
+
+const { photo } = Astro.props;
+---
+
+<figure class="photo-card">
+  <a 
+    href={photo.full} 
+    data-pswp-width={photo.width}
+    data-pswp-height={photo.height}
+    target="_blank"
+    class="pswp-link"
+  >
+    <img 
+      src={photo.src} 
+      alt={photo.alt} 
+      width={photo.width}
+      height={photo.height}
+      loading="lazy"
+      style={`aspect-ratio: ${photo.width} / ${photo.height};`} 
+    />
+  </a>
+  
+  <div class="card-overlay">
+    {photo.exif && <span class="overlay-exif">{photo.exif}</span>}
+    
+    <div class="hidden-caption" style="display: none;">
+      {photo.caption && <span class="caption-title">{photo.caption}</span>}
+      {photo.exif && <small>{photo.exif}</small>}
+    </div>
+  </div>
+</figure>
+
+<style>
+  .photo-card {
+    position: relative; /* CRITICAL for absolute positioning of overlay */
+    z-index: 1;
+    margin-bottom: 20px;
+    break-inside: avoid;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #000;
+  }
+
+  .pswp-link {
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: zoom-in;
+  }
+
+  .photo-card img {
+    display: block;
+    width: 100%;
+    height: auto;
+    transition: opacity 0.3s ease;
+  }
+
+  .photo-card:hover img {
+    opacity: 0.9;
+  }
+
+  /* --- OVERLAY STYLES --- */
+  .card-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 15px 10px 10px;
+    /* Gradient only covers the bottom text area */
+    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+    
+    opacity: 0; /* Hidden by default */
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+
+  /* Show on hover */
+  .photo-card:hover .card-overlay {
+    opacity: 1;
+  }
+
+  .overlay-exif {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.9);
+    letter-spacing: 0.05em;
+  }
+</style>

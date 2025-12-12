@@ -1,0 +1,166 @@
+---
+import "@pagefind/default-ui/css/ui.css";
+---
+
+<div id="search" class="search-container"></div>
+
+<script>
+  document.addEventListener('astro:page-load', async () => {
+    if (document.querySelector('#search')) {
+      const { PagefindUI } = await import('@pagefind/default-ui');
+      new PagefindUI({
+        element: "#search",
+        showSubResults: true,
+        showImages: false,
+        resetStyles: false 
+      });
+    }
+  });
+</script>
+
+<style>
+  .search-container {
+    width: 100%;
+    font-family: var(--font-sans);
+  }
+
+  /* =========================================
+     1. THE INPUT BOX (Clean & Text Only)
+     ========================================= */
+  :global(.pagefind-ui__search-input) {
+    background-color: transparent !important;
+    border: none !important;
+    border-bottom: 1px solid var(--border) !important; /* Underline style only */
+    border-radius: 0 !important;
+    
+    color: var(--text-main) !important;
+    font-family: var(--font-serif) !important;
+    font-size: 1.5rem !important; /* Big, cinematic text */
+    padding: 10px 0 !important;    /* Remove side padding */
+    margin: 0 !important;
+    
+    outline: none !important;
+    box-shadow: none !important;
+    -webkit-appearance: none;
+  }
+  
+  :global(.pagefind-ui__search-input:focus) {
+    border-bottom-color: var(--text-main) !important;
+  }
+
+  /* Placeholder Style */
+  :global(input.pagefind-ui__search-input::placeholder) {
+    color: var(--text-muted) !important;
+    opacity: 0.5;
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    transform: translateY(-2px);
+  }
+
+  /* KILL THE ICON: Targets every possible place Pagefind puts it */
+  :global(.pagefind-ui__search-icon), 
+  :global(.pagefind-ui__search-clear),
+  :global(.pagefind-ui__form::before),
+  :global(.pagefind-ui__form::after) {
+    display: none !important;
+    visibility: hidden !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  /* =========================================
+     2. THE RESULTS DRAWER (Minimal Float)
+     ========================================= */
+  :global(.pagefind-ui__drawer) {
+    background-color: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+    margin-top: 2rem !important;
+    max-height: 50vh;
+    overflow-y: auto;
+    
+    /* Hide Scrollbar */
+    scrollbar-width: none; 
+  }
+  :global(.pagefind-ui__drawer::-webkit-scrollbar) { display: none; }
+
+  /* =========================================
+     3. THE RESULT ITEMS (Spacing & Type)
+     ========================================= */
+  
+  /* The individual result container */
+  :global(.pagefind-ui__result) {
+    border: none !important;
+    padding: 1.5rem 0 !important; /* Generous vertical spacing */
+    border-bottom: 1px solid var(--border) !important;
+  }
+  
+  /* Remove the last border */
+  :global(.pagefind-ui__result:last-child) {
+    border-bottom: none !important;
+  }
+
+  /* The Image Thumbnail (Force Hidden) */
+  :global(.pagefind-ui__result-thumb) {
+    display: none !important;
+  }
+
+  /* The Inner Content Wrapper */
+  :global(.pagefind-ui__result-inner) {
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  /* TITLE (Serif, Elegant) */
+  :global(.pagefind-ui__result-title) {
+    display: block !important;
+    font-family: var(--font-serif) !important;
+    font-size: 1.2rem !important;
+    font-weight: 500 !important;
+    color: var(--text-main) !important;
+    margin: 0 !important;
+  }
+  
+  :global(.pagefind-ui__result-link) {
+    color: var(--text-main) !important;
+    text-decoration: none !important;
+    transition: opacity 0.2s ease;
+  }
+  
+  :global(.pagefind-ui__result-link:hover) {
+    opacity: 0.7;
+    text-decoration: underline;
+    text-decoration-color: var(--text-muted);
+    text-underline-offset: 4px;
+  }
+
+  /* EXCERPT (Mono, Technical) */
+  :global(.pagefind-ui__result-excerpt) {
+    font-family: var(--font-mono) !important;
+    font-size: 0.8rem !important;
+    color: var(--text-muted) !important;
+    line-height: 1.5 !important;
+    margin: 0 !important;
+    font-weight: 400 !important;
+  }
+
+  /* HIGHLIGHTS (The <mark> tag) */
+  :global(mark) {
+    background-color: transparent !important;
+    color: var(--text-main) !important;
+    font-weight: 600 !important;
+    text-decoration: underline;
+    text-decoration-color: var(--text-muted);
+  }
+  
+  /* Message shown when no results found */
+  :global(.pagefind-ui__message) {
+    font-family: var(--font-mono) !important;
+    color: var(--text-muted) !important;
+    padding: 2rem 0 !important;
+    text-align: left !important;
+  }
+</style>

@@ -1,16 +1,151 @@
 ---
+// src/pages/index.astro
+import BaseLayout from "../layouts/BaseLayout.astro";
+import photosData from "../data/photos.json";
 
+// 1. Get a random "Hero" image from your portfolio
+const allPhotos = photosData.photos || [];
+const randomPhoto = allPhotos[Math.floor(Math.random() * allPhotos.length)];
+
+// Fallback if no photos exist yet
+const heroImage = randomPhoto ? randomPhoto.src : "/images/ui/placeholder.jpg";
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<BaseLayout title="Home" description="The photography portfolio of J. R. Hernandez.">
+  
+  <section class="hero-section">
+    
+    <div class="hero-content">
+      <h1 class="hero-title">Visual Field Notes.</h1>
+      <p class="hero-text">
+        Documentation of light, biology, and the quiet moments in between. 
+        A collection of frames from the lab and the world outside it.
+      </p>
+      
+      <div class="cta-wrapper">
+        <a href="/gallery" class="btn-primary">View the Gallery</a>
+        <a href="/resources" class="btn-text">View Resources &rarr;</a>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="polaroid-stack">
+        <img src={heroImage} alt="Featured Shot" class="hero-img" />
+        <div class="meta-tag">
+            <span>FEATURED SHOT</span>
+            <span class="mono">{randomPhoto?.exif || "Unknown Camera"}</span>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+</BaseLayout>
+
+<style>
+  .hero-section {
+    min-height: 70vh;
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: center;
+    gap: 3rem;
+    padding: 2rem 0;
+  }
+
+  @media (min-width: 900px) {
+    .hero-section {
+      grid-template-columns: 1.2fr 1fr; /* Text wider than image */
+      gap: 5rem;
+    }
+  }
+
+  .hero-title {
+    font-family: var(--font-serif);
+    font-size: clamp(3rem, 8vw, 5rem);
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+    color: var(--text-main);
+  }
+
+  .hero-text {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    max-width: 38ch;
+    margin-bottom: 2.5rem;
+    line-height: 1.6;
+  }
+
+  .cta-wrapper {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+  }
+
+  .btn-primary {
+    background-color: var(--text-main);
+    color: var(--bg-paper);
+    padding: 12px 28px;
+    border-radius: 50px;
+    text-decoration: none;
+    font-size: 0.9rem;
+    letter-spacing: 0.05em;
+    font-weight: 500;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
+  }
+
+  .btn-text {
+    color: var(--text-main);
+    text-decoration: none;
+    font-size: 0.9rem;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s ease;
+  }
+  
+  .btn-text:hover { border-bottom-color: var(--text-main); }
+
+  /* VISUAL SIDE */
+  .hero-visual {
+    position: relative;
+    display: flex;
+    justify-content: center;
+  }
+
+  .hero-img {
+    width: 100%;
+    max-height: 600px;
+    object-fit: cover;
+    border-radius: var(--radius);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+    transform: rotate(2deg); /* Artistic tilt */
+    transition: transform 0.5s ease;
+  }
+
+  .hero-visual:hover .hero-img {
+    transform: rotate(0deg) scale(1.02);
+  }
+
+  .meta-tag {
+    position: absolute;
+    bottom: -20px;
+    right: -20px;
+    background: var(--bg-paper);
+    padding: 10px 20px;
+    border: 1px solid var(--border);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+  }
+
+  .mono {
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+  }
+</style>

@@ -1,0 +1,64 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import PhotoCard from "../../../components/PhotoCard.astro";
+import photosData from "../../../data/photos.json";
+
+// 1. Generate Pages for every Album (Street/SF, Travel/Japan)
+export async function getStaticPaths() {
+  const allPhotos = photosData.photos || [];
+  // Find photos that HAVE an album
+  const albumPhotos = allPhotos.filter(p => p.album !== null);
+  
+  // Get unique combinations of Collection + Album
+  // We need to map unique pairs, not just unique names
+  const paths = [];
+  const seen = new Set();
+  
+  albumPhotos.forEach(p => {
+    const key = `${p.collection}/${p.album}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      paths.push({
+        params: { collection: p.collection, album: p.album },
+        props: { 
+          // Only pass photos for this specific album
+          photos: allPhotos.filter(img => img.collection === p.collection && img.album === p.album)
+        }
+      });
+    }
+  });
+  
+  return paths;
+}
+
+const { collection, album } = Astro.params;
+const { photos } = Astro.props;
+
+const displayTitle = album.charAt(0).toUpperCase() + album.slice(1);
+const parentTitle = collection.charAt(0).toUpperCase() + collection.slice(1);
+---
+
+<BaseLayout title={`${displayTitle} - ${parentTitle}`}>
+  
+  <header class="collection-header">
+    <div class="header-content">
+      <a href={`/collections/${collection}`} class="back-link">← {parentTitle}</a>
+      <h1 class="collection-title">{displayTitle}</h1>
+      <p class="collection-count">{photos.length} Frames</p>
+    </div>
+  </header>
+
+  <section class="photo-grid">
+    {photos.map((photo) => (
+      <PhotoCard photo={photo} />
+    ))}
+  </section>
+
+</BaseLayout>
+
+<style>
+  .collection-header { margin: 2rem 0 3rem 0; border-bottom: 1px solid var(--border); padding-bottom: 2rem; }
+  .back-link { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); text-decoration: none; }
+  .collection-title { font-family: var(--font-serif); font-size: 3rem; margin: 0.5rem 0; color: var(--text-main); text-transform: capitalize; }
+  .collection-count { font-family: var(--font-mono); color: var(--text-muted); }
+</style>

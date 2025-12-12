@@ -1,0 +1,202 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import PhotoCard from "../components/PhotoCard.astro";
+import photosData from "../data/photos.json";
+
+const allPhotos = photosData.photos || [];
+
+// --- 1. PREPARE COLLECTIONS ---
+const customOrder = ['Portrait', 'Street', 'Travel']; 
+
+// Step A: Get the sorted list of names
+const uniqueCollections = [...new Set(allPhotos.map(p => p.collection))]
+  .filter(c => c !== 'uncategorized')
+  .sort((a, b) => {
+    const indexA = customOrder.indexOf(a);
+    const indexB = customOrder.indexOf(b);
+    if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+    if (indexA !== -1) return -1;
+    if (indexB !== -1) return 1;
+    return a.localeCompare(b);
+  });
+
+// Step B: Turn those names into Data Objects (MISSING IN YOUR CODE)
+const collections = uniqueCollections.map(name => {
+  const photosInCol = allPhotos.filter(p => p.collection === name);
+  return {
+    name: name,
+    count: photosInCol.length,
+    cover: photosInCol[0]?.src // Grab first photo as cover
+  };
+});
+
+// --- 2. PREPARE THE STREAM ---
+const randomStream = allPhotos
+  .sort(() => 0.5 - Math.random())
+  .slice(0, 15);
+---
+<BaseLayout title="Gallery" description="Browse collections and featured shots.">
+  
+<header class="gallery-header">
+    <h1 class="page-title">Gallery.</h1>
+    <p class="page-desc">Explore by series or wander through the stream.</p>
+  </header>
+
+
+
+  <section class="collections-nav">
+    <div class="nav-grid">
+      {collections.map((col) => (
+        <a href={`/collections/${col.name}`} class="nav-card">
+          <div class="nav-img-box">
+            <img src={col.cover} alt={col.name} loading="lazy" />
+            <div class="nav-overlay">
+              <span class="arrow">→</span>
+            </div>
+          </div>
+          <div class="nav-meta">
+            <span class="nav-title">{col.name}</span>
+            <span class="nav-count">{col.count}</span>
+          </div>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <div class="divider">
+    <span class="divider-text">Featured Stream</span>
+  </div>
+
+  <section class="photo-grid">
+    {randomStream.map((photo) => (
+      <PhotoCard photo={photo} />
+    ))}
+  </section>
+
+  <div class="stream-footer">
+    <button class="btn-refresh" onclick="window.location.reload();">
+      Shuffle Stream ↻
+    </button>
+  </div>
+
+</BaseLayout>
+
+<style>
+  .gallery-header {
+    margin-bottom: 3rem;
+  }
+  
+  .page-title {
+    font-family: var(--font-serif);
+    font-size: 3rem;
+    margin: 0 0 0.5rem 0;
+    color: var(--text-main);
+  }
+
+  .page-desc {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+  }
+
+  /* --- COLLECTIONS NAV --- */
+  .collections-nav {
+    margin-bottom: 5rem;
+  }
+
+  .nav-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* Force 3 columns for your 3 collections */
+    gap: 20px;
+  }
+  
+  @media (max-width: 768px) {
+    .nav-grid { grid-template-columns: 1fr; } /* Stack on mobile */
+  }
+
+  .nav-card {
+    text-decoration: none;
+    group: pointer;
+  }
+
+  .nav-img-box {
+    aspect-ratio: 16/9; /* Widescreen cards */
+    border-radius: var(--radius);
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 0.75rem;
+    background: var(--bg-surface);
+  }
+
+  .nav-img-box img {
+    width: 100%; height: 100%; object-fit: cover;
+    transition: transform 0.5s ease;
+    filter: grayscale(30%);
+  }
+
+  .nav-card:hover img {
+    transform: scale(1.05);
+    filter: grayscale(0%);
+  }
+
+  .nav-title {
+    font-family: var(--font-serif);
+    font-size: 1.25rem;
+    color: var(--text-main);
+    text-transform: capitalize;
+    display: block;
+  }
+
+  .nav-count {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  /* --- DIVIDER --- */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 0 0 3rem 0;
+    opacity: 0.5;
+  }
+  
+  .divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .divider-text {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-muted);
+  }
+
+  /* --- FOOTER --- */
+  .stream-footer {
+    margin-top: 4rem;
+    display: flex;
+    justify-content: center;
+  }
+
+  .btn-refresh {
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 10px 20px;
+    border-radius: 50px;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .btn-refresh:hover {
+    border-color: var(--text-main);
+    color: var(--text-main);
+  }
+</style>

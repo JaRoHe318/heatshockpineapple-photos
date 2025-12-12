@@ -1,0 +1,67 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout title="404" description="Page not found.">
+  <div class="error-container">
+    <div class="visual-noise"></div>
+    
+    <div class="content">
+      <h1 class="error-code">404</h1>
+      <p class="error-text">Negative not found.</p>
+      <a href="/" class="btn-return">Return to Light</a>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .error-container {
+    height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .error-code {
+    font-family: var(--font-mono);
+    font-size: clamp(5rem, 15vw, 12rem);
+    line-height: 1;
+    color: var(--text-muted);
+    opacity: 0.2;
+    margin: 0;
+    filter: blur(2px);
+  }
+
+  .content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+  }
+
+  .error-text {
+    font-family: var(--font-serif);
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+    color: var(--text-main);
+  }
+
+  .btn-return {
+    display: inline-block;
+    padding: 12px 24px;
+    border: 1px solid var(--border);
+    border-radius: 50px;
+    text-decoration: none;
+    color: var(--text-main);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    transition: all 0.3s ease;
+  }
+
+  .btn-return:hover {
+    background: var(--text-main);
+    color: var(--bg-paper);
+  }
+</style>

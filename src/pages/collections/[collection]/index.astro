@@ -1,0 +1,110 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import PhotoCard from "../../../components/PhotoCard.astro";
+import photosData from "../../../data/photos.json";
+
+// 1. Generate Pages for each Collection (Street, Travel)
+export async function getStaticPaths() {
+  const allPhotos = photosData.photos || [];
+  const uniqueCollections = [...new Set(allPhotos.map(p => p.collection))];
+  
+  return uniqueCollections.map(col => ({
+    params: { collection: col },
+    props: { 
+      // Pass ALL photos for this collection
+      photos: allPhotos.filter(p => p.collection === col)
+    }
+  }));
+}
+
+const { collection } = Astro.params;
+const { photos } = Astro.props;
+
+// 2. SEPARATE CONTENT
+// Sub-Albums: Photos that HAVE an album name
+const albumPhotos = photos.filter(p => p.album !== null);
+const uniqueAlbums = [...new Set(albumPhotos.map(p => p.album))];
+
+// The Stream: Photos that DO NOT have an album name (Loose files)
+const streamPhotos = photos.filter(p => p.album === null);
+
+// 3. PREPARE ALBUM CARDS
+const albumCards = uniqueAlbums.map(name => {
+  const pics = albumPhotos.filter(p => p.album === name);
+  return {
+    name: name,
+    count: pics.length,
+    cover: pics[0]?.src
+  };
+});
+
+const displayTitle = collection.charAt(0).toUpperCase() + collection.slice(1);
+---
+
+<BaseLayout title={displayTitle}>
+  
+  <header class="collection-header">
+    <div class="header-content">
+      <a href="/gallery" class="back-link">← Gallery</a>
+      <h1 class="collection-title">{displayTitle}</h1>
+      <p class="collection-count">
+        {uniqueAlbums.length > 0 ? `${uniqueAlbums.length} Albums · ` : ""}
+        {streamPhotos.length} Singles
+      </p>
+    </div>
+  </header>
+
+  {albumCards.length > 0 && (
+    <section class="albums-section">
+      <h2 class="section-label">Albums</h2>
+      <div class="album-grid">
+        {albumCards.map((alb) => (
+          /* LINK TO SUB-PAGE */
+          <a href={`/collections/${collection}/${alb.name}`} class="album-card">
+            <div class="album-cover">
+              <img src={alb.cover} alt={alb.name} loading="lazy" />
+              <div class="album-overlay"><span>View Album →</span></div>
+            </div>
+            <div class="album-meta">
+              <h3>{alb.name}</h3>
+              <span>{alb.count}</span>
+            </div>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  {streamPhotos.length > 0 && (
+    <section class="stream-section">
+      {albumCards.length > 0 && <h2 class="section-label">Stream</h2>}
+      <div class="photo-grid">
+        {streamPhotos.map((photo) => (
+          <PhotoCard photo={photo} />
+        ))}
+      </div>
+    </section>
+  )}
+
+</BaseLayout>
+
+<style>
+  .collection-header { margin: 2rem 0 3rem 0; border-bottom: 1px solid var(--border); padding-bottom: 2rem; }
+  .back-link { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); text-decoration: none; }
+  .collection-title { font-family: var(--font-serif); font-size: 3rem; margin: 0.5rem 0; color: var(--text-main); text-transform: capitalize; }
+  .collection-count { font-family: var(--font-mono); color: var(--text-muted); }
+
+  .section-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-muted); margin: 0 0 1.5rem 0; opacity: 0.7; }
+  
+  .albums-section { margin-bottom: 5rem; }
+  .album-grid { display: grid; grid-template-columns: 1fr; gap: 30px; }
+  @media (min-width: 768px) { .album-grid { grid-template-columns: 1fr 1fr; } }
+
+  .album-card { text-decoration: none; color: var(--text-main); group: pointer; }
+  .album-cover { aspect-ratio: 3/2; border-radius: var(--radius); overflow: hidden; margin-bottom: 0.75rem; position: relative; background: var(--bg-surface); }
+  .album-cover img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
+  .album-card:hover img { transform: scale(1.05); }
+  .album-meta { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 8px; }
+  .album-meta h3 { font-size: 1.1rem; margin: 0; font-weight: 500; text-transform: capitalize; }
+  .album-meta span { font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted); }
+</style>
