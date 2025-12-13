@@ -1,127 +1,218 @@
-import fs from 'fs';
+import fs from 'fs-extra';
 import path from 'path';
+import sharp from 'sharp';
+import { glob } from 'glob';
 import exifParser from 'exif-parser';
-import sharp from 'sharp'; // <--- NEW IMPORT
 
 // CONFIGURATION
-const PROJECTS_DIR = './public/images/projects';
-const THUMBS_DIR = './public/images/thumbs'; // <--- NEW STORAGE FOLDER
-const OUTPUT_FILE = './src/data/photos.json';
+const PROJECTS_DIR = 'originals'; // Private source folder (NOT deployed)
+const THUMBS_DIR = 'public/images/thumbs';
+const FULL_DIR = 'public/images/full';
+const DATA_FILE = 'src/data/photos.json';
+
+// SETTINGS
+const THUMB_WIDTH = 800;
+const THUMB_QUALITY = 80;
+const FULL_WIDTH = 2400;
+const FULL_QUALITY = 90;
 
 function cleanModel(model) {
   if (!model) return 'Unknown Camera';
   return model.replace('Canon EOS ', '').replace(' Mark II', ' II');
 }
 
-function getFilesRecursively(dir) {
-  let results = [];
-  const list = fs.readdirSync(dir);
-  list.forEach(file => {
-    const filePath = path.join(dir, file);
-    const stat = fs.statSync(filePath);
-    if (stat && stat.isDirectory()) {
-      results = results.concat(getFilesRecursively(filePath));
-    } else {
-      const ext = path.extname(file).toLowerCase();
-      if (ext === '.jpg' || ext === '.jpeg') {
-        results.push(filePath);
+async function generate() {
+  // Guard: Ensure source exists
+  if (!(await fs.pathExists(PROJECTS_DIR))) {
+    console.error(`❌ Source directory "${PROJECTS_DIR}" not found.`);
+    console.error(`   Please move your photo folders into a root "${PROJECTS_DIR}" folder.`);
+    process.exit(1);
+  }
+
+  console.log(`📷 Scanning photo library in ${PROJECTS_DIR}...`);
+
+  await fs.ensureDir(THUMBS_DIR);
+  await fs.ensureDir(FULL_DIR);
+
+  const stats = {
+    total: 0,
+    generatedThumbs: 0,
+    generatedFulls: 0,
+    skipped: 0,
+    failed: 0,
+  };
+
+  const seen = new Set();
+
+  const images = await glob(
+    `${PROJECTS_DIR}/**/*.{jpg,jpeg,png,webp,JPG,JPEG,PNG,WEBP}`
+  );
+
+  const photos = [];
+
+  for (const filePath of images) {
+    const relativePath = path.relative(PROJECTS_DIR, filePath);
+
+    // Cross-platform normalized key
+    const relKey = relativePath.split(path.sep).join('/');
+
+    // Dedup
+    if (seen.has(relKey)) continue;
+    seen.add(relKey);
+
+    const pathParts = relKey.split('/');
+
+    // Guard: require category folder
+    if (pathParts.length < 2) {
+      console.warn(`⚠️  Skipping file in root (needs a category folder): ${relativePath}`);
+      stats.failed++;
+      continue;
+    }
+
+    const category = pathParts[0];
+    const album = pathParts.length > 2 ? pathParts.slice(1, -1).join('/') : null;
+
+    // Collision-proof id
+    const id = relKey.replace(/\.[^/.]+$/, '').split('/').join('__');
+
+    // Output paths (force .jpg)
+    const outRelKey = relKey.replace(/\.(jpe?g|png|webp)$/i, '.jpg');
+    const outRelFs = outRelKey.split('/').join(path.sep);
+
+    const destThumbPath = path.join(THUMBS_DIR, outRelFs);
+    const destFullPath = path.join(FULL_DIR, outRelFs);
+
+    // Web paths (always forward slashes)
+    const webThumbPath = `/images/thumbs/${outRelKey}`;
+    const webFullPath = `/images/full/${outRelKey}`;
+
+    await fs.ensureDir(path.dirname(destThumbPath));
+    await fs.ensureDir(path.dirname(destFullPath));
+
+    try {
+      const srcStat = await fs.stat(filePath);
+
+      // Cache checks
+      let genThumb = true;
+      let genFull = true;
+
+      if (await fs.pathExists(destThumbPath)) {
+        const destStat = await fs.stat(destThumbPath);
+        if (destStat.mtimeMs >= srcStat.mtimeMs) genThumb = false;
       }
-    }
-  });
-  return results;
-}
 
-console.log(`📷 Scanning ${PROJECTS_DIR}...`);
+      if (await fs.pathExists(destFullPath)) {
+        const destStat = await fs.stat(destFullPath);
+        if (destStat.mtimeMs >= srcStat.mtimeMs) genFull = false;
+      }
 
-if (!fs.existsSync(PROJECTS_DIR)) {
-  console.error(`Error: Directory ${PROJECTS_DIR} does not exist.`);
-  process.exit(1);
-}
+      // Read source once (needed for EXIF + potential generation)
+      const buffer = await fs.readFile(filePath);
 
-// Ensure Thumbs Directory Exists
-if (!fs.existsSync(THUMBS_DIR)) {
-  fs.mkdirSync(THUMBS_DIR, { recursive: true });
-}
+      // Dimension truth source: the /full file on disk
+      let finalWidth = 0;
+      let finalHeight = 0;
 
-const allFiles = getFilesRecursively(PROJECTS_DIR);
-const photos = [];
+      // A) Full export (metadata stripped)
+      if (genFull) {
+        const info = await sharp(buffer)
+          .rotate()
+          .resize({ width: FULL_WIDTH, withoutEnlargement: true })
+          .jpeg({ quality: FULL_QUALITY, mozjpeg: true })
+          .toFile(destFullPath);
 
-// We use a for...of loop to handle async/await cleanly
-for (const filePath of allFiles) {
-  const buffer = fs.readFileSync(filePath);
-  
-  // --- 1. PATHING & HIERARCHY ---
-  const relativePath = path.relative(PROJECTS_DIR, filePath);
-  const pathParts = relativePath.split(path.sep);
-  
-  let category = pathParts[0]; 
-  let album = null;
-  
-  if (pathParts.length > 1) {
-    if (pathParts.length > 2) {
-      album = pathParts[1];
+        if (!info.width || !info.height) {
+          throw new Error(`Generated full missing dimensions: ${destFullPath}`);
+        }
+
+        finalWidth = info.width;
+        finalHeight = info.height;
+        stats.generatedFulls++;
+      } else {
+        const meta = await sharp(destFullPath).metadata();
+
+        if (!meta.width || !meta.height) {
+          throw new Error(`Cached full missing dimensions: ${destFullPath}`);
+        }
+
+        finalWidth = meta.width;
+        finalHeight = meta.height;
+      }
+
+      // B) Thumb export
+      if (genThumb) {
+        await sharp(buffer)
+          .rotate()
+          .resize({ width: THUMB_WIDTH, withoutEnlargement: true })
+          .jpeg({ quality: THUMB_QUALITY, mozjpeg: true })
+          .toFile(destThumbPath);
+
+        stats.generatedThumbs++;
+      }
+
+      if (!genThumb && !genFull) stats.skipped++;
+
+      // C) EXIF display string (from ORIGINAL buffer; not published)
+      let exifString = '';
+      try {
+        const parser = exifParser.create(buffer);
+        const result = parser.parse();
+        if (result.tags) {
+          const camera = cleanModel(result.tags.Model);
+          const focal = result.tags.FocalLength ? `${result.tags.FocalLength}mm` : '';
+
+          let aperture = '';
+          if (result.tags.FNumber) {
+            aperture = `f/${Number(result.tags.FNumber).toFixed(1).replace(/\.0$/, '')}`;
+          }
+
+          const parts = [camera, focal, aperture].filter(Boolean);
+          exifString = parts.join(' · ');
+        }
+      } catch {
+        // ignore EXIF errors
+      }
+
+      // === UPDATED LOGIC START ===
+      // Removed filename parsing. Just use generic Alt Text.
+      const altText = `${category} Photograph`;
+      // === UPDATED LOGIC END ===
+
+      photos.push({
+        id,
+        src: webThumbPath,
+        full: webFullPath,
+        alt: altText,
+        collection: category, // compatibility
+        category,
+        album,
+        exif: exifString,
+        width: finalWidth,
+        height: finalHeight,
+      });
+
+      stats.total++;
+    } catch (err) {
+      console.error(`⚠️  Skipping: ${relativePath}`, err?.message ?? err);
+      stats.failed++;
+      continue;
     }
   }
 
-  // --- 2. GENERATE THUMBNAIL (The Optimization) ---
-  // Mirror the folder structure in /thumbs
-  const thumbPath = path.join(THUMBS_DIR, relativePath);
-  const thumbDir = path.dirname(thumbPath);
-  
-  if (!fs.existsSync(thumbDir)) {
-    fs.mkdirSync(thumbDir, { recursive: true });
-  }
+  photos.sort((a, b) => a.id.localeCompare(b.id));
+  await fs.outputJson(DATA_FILE, { photos }, { spaces: 2 });
 
-  // Only create thumb if it doesn't exist (Speed up re-runs)
-  if (!fs.existsSync(thumbPath)) {
-    console.log(`⚡ Generating thumb: ${relativePath}`);
-    await sharp(buffer)
-      .resize({ width: 800, withoutEnlargement: true }) // Perfect size for grid columns
-      .jpeg({ quality: 80 }) // Good compression
-      .toFile(thumbPath);
-  }
-
-  // --- 3. EXIF & DATA ---
-  let exifString = '';
-  let width = 0;
-  let height = 0;
-
-  try {
-    const parser = exifParser.create(buffer);
-    const result = parser.parse();
-    // We want the ORIGINAL dimensions for layout ratios
-    if (result.imageSize) {
-      width = result.imageSize.width;
-      height = result.imageSize.height;
-    }
-    const { tags } = result;
-    if (tags) {
-      const camera = cleanModel(tags.Model);
-      const focal = tags.FocalLength ? `${tags.FocalLength}mm` : '';
-      const aperture = tags.FNumber ? `f/${tags.FNumber}` : '';
-      const parts = [camera, focal, aperture].filter(p => p !== '');
-      exifString = parts.join(' · ');
-    }
-  } catch (err) {}
-
-  // --- 4. WEB PATHS ---
-  // webPath = Thumbnail (Fast)
-  const webPath = `/images/thumbs/${relativePath.split(path.sep).join('/')}`;
-  // fullPath = Original (High Res)
-  const fullPath = `/images/projects/${relativePath.split(path.sep).join('/')}`;
-
-  photos.push({
-    src: webPath,      // Used for Grid
-    full: fullPath,    // Used for Lightbox (NEW)
-    alt: category + ' photography',
-    collection: category,
-    album: album,
-    exif: exifString,
-    width: width,
-    height: height
-  });
+  console.log(`
+✅ Build Complete
+-----------------------------------
+Source:         ${PROJECTS_DIR}
+Total Photos:   ${stats.total}
+Thumbs Gen:     ${stats.generatedThumbs}
+Fulls Gen:      ${stats.generatedFulls}
+Cached:         ${stats.skipped}
+Failed:         ${stats.failed}
+-----------------------------------
+`);
 }
 
-const output = { photos };
-fs.writeFileSync(OUTPUT_FILE, JSON.stringify(output, null, 2));
-console.log(`✅ Processed ${photos.length} photos with thumbnails.`);
+generate().catch(console.error);

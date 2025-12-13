@@ -5,9 +5,9 @@ interface Props {
     alt: string;
     caption?: string;
     exif?: string;
-    width?: number;
-    height?: number;
-    full?: string;
+    width: number;
+    height: number;
+    full: string;
   };
 }
 
@@ -36,21 +36,21 @@ const { photo } = Astro.props;
     {photo.exif && <span class="overlay-exif">{photo.exif}</span>}
     
     <div class="hidden-caption" style="display: none;">
-      {photo.caption && <span class="caption-title">{photo.caption}</span>}
-      {photo.exif && <small>{photo.exif}</small>}
+      {photo.exif && <small style="font-family: var(--font-mono); font-size: 0.8rem; opacity: 0.8;">{photo.exif}</small>}
     </div>
   </div>
 </figure>
 
 <style>
   .photo-card {
-    position: relative; /* CRITICAL for absolute positioning of overlay */
+    position: relative;
     z-index: 1;
     margin-bottom: 20px;
     break-inside: avoid;
     border-radius: 4px;
     overflow: hidden;
     background: #000;
+    display: block; 
   }
 
   .pswp-link {
@@ -78,15 +78,12 @@ const { photo } = Astro.props;
     left: 0;
     right: 0;
     padding: 15px 10px 10px;
-    /* Gradient only covers the bottom text area */
     background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
-    
-    opacity: 0; /* Hidden by default */
+    opacity: 0; 
     transition: opacity 0.3s ease;
     pointer-events: none;
   }
 
-  /* Show on hover */
   .photo-card:hover .card-overlay {
     opacity: 1;
   }

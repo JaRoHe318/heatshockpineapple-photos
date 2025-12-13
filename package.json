@@ -16,6 +16,8 @@
     "@pagefind/default-ui": "^1.4.0",
     "astro": "^5.0.0",
     "exif-parser": "^0.1.12",
+    "fs-extra": "^11.3.2",
+    "glob": "^13.0.0",
     "photoswipe": "^5.4.4",
     "sharp": "^0.34.5"
   },

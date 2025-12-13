@@ -22,3 +22,13 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# === PHOTO PIPELINE ===
+# 1. IGNORE the Source (Keep GPS/Raw files local only)
+originals/
+
+# 2. OPTIONAL: Ignore the old projects folder to prevent confusion
+public/images/projects/
+
+# NOTE: We do NOT ignore 'public/images/thumbs' or 'public/images/full'.
+# We want Git to track these so they get uploaded to your website.

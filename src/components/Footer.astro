@@ -3,96 +3,95 @@ const currentYear = new Date().getFullYear();
 ---
 
 <footer class="site-footer">
-  <div class="sequence-tape" aria-hidden="true">
-    <div class="scrolling-text">
-      OPTICS · REFRACTION · APERTURE · DIFFRACTION · CHROMATIC ABERRATION · FOCAL LENGTH · DEPTH OF FIELD · CIRCLE OF CONFUSION · HYPERFOCAL DISTANCE · BOKEH · SHUTTER ANGLE · ISO INVARIANCE · DYNAMIC RANGE · OPTICS · REFRACTION · APERTURE · DIFFRACTION · CHROMATIC ABERRATION · FOCAL LENGTH · DEPTH OF FIELD · CIRCLE OF CONFUSION · HYPERFOCAL DISTANCE · BOKEH · SHUTTER ANGLE · ISO INVARIANCE · DYNAMIC RANGE
+  <div class="footer-inner">
+    
+    <div class="footer-brand">
+      <span class="brand-text">Heat Shock<span class="gold">Pineapple</span></span>
+      <p class="copyright">&copy; {currentYear} Jason Hernandez</p>
     </div>
-  </div>
 
-  <div class="footer-content">
-    <p>&copy; {currentYear} Jason Hernandez.</p>
     <div class="footer-links">
       <a href="https://github.com/jarohe318" target="_blank" rel="noopener noreferrer">GitHub</a>
       <a href="https://heatshockpineapple.substack.com" target="_blank" rel="noopener noreferrer">Substack</a>
       <a href="https://www.linkedin.com/in/jrh318" target="_blank" rel="noopener noreferrer">LinkedIn</a>
     </div>
+
   </div>
 </footer>
 
 <style>
   .site-footer {
+    width: 100%;
+    /* DEEP GREEN BACKGROUND */
+    background: #243b30;
+    color: #ffffff;
     margin-top: 6rem;
-    border-top: 1px solid var(--border);
-    font-family: var(--font-mono);
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    overflow: hidden;
-    width: 100%; /* Ensures footer background spans full width */
+    padding: 3rem 0;
   }
 
-  .sequence-tape {
+  .footer-inner {
     width: 100%;
-    background: var(--bg-surface);
-    border-bottom: 1px solid var(--border);
-    padding: 0.4rem 0;
-    margin-bottom: 2rem;
-    user-select: none;
-    opacity: 0.5;
-  }
-
-  .scrolling-text {
-    white-space: nowrap;
-    font-size: 0.7rem;
-    letter-spacing: 0.15em;
-    color: var(--accent-primary);
-    animation: scroll 60s linear infinite;
-  }
-
-  @keyframes scroll {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-  }
-
-  /* FIX: Match BaseLayout Width and Padding */
-  .footer-content {
-    width: 100%;
-    max-width: 1400px; /* MATCHES BASE LAYOUT */
+    max-width: 1600px; /* Matches Header */
     margin: 0 auto;
-    padding: 0 24px 2rem; /* MATCHES BASE LAYOUT MOBILE */
+    padding: 0 2rem;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
+    flex-direction: column;
+    gap: 2rem;
   }
 
+  /* DESKTOP: Row Layout */
   @media (min-width: 768px) {
-    .footer-content {
-      padding: 0 40px 2rem; /* MATCHES BASE LAYOUT DESKTOP */
+    .footer-inner {
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: flex-end;
     }
   }
 
+  /* BRANDING */
+  .footer-brand {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .brand-text {
+    font-family: var(--font-serif);
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #ffffff;
+    word-spacing: -0.15em; /* Matches Header */
+  }
+
+  .gold {
+    color: var(--accent-secondary);
+    font-style: normal;
+    margin-left: 0.2em; /* Small gap logic */
+  }
+
+  .copyright {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+
+  /* LINKS */
   .footer-links {
     display: flex;
     gap: 1.5rem;
   }
 
   .footer-links a {
-    border-bottom: none;
-    color: var(--text-muted);
-    transition: color 0.2s ease;
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.7);
     text-decoration: none;
+    transition: color 0.2s;
   }
 
   .footer-links a:hover {
-    color: var(--accent-primary);
-  }
-
-  @media (max-width: 768px) {
-    .footer-content {
-      flex-direction: column;
-      gap: 1rem;
-      text-align: center;
-    }
+    color: #ffffff;
   }
 </style>

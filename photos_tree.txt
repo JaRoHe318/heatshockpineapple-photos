@@ -1,25 +1,57 @@
 .
 ├── astro.config.mjs
+├── LICENSE
 ├── package-lock.json
 ├── package.json
 ├── photos_tree.txt
 ├── public
-│   ├── favicon.svg
+│   ├── android-chrome-192x192.png
+│   ├── android-chrome-512x512.png
+│   ├── apple-touch-icon.png
+│   ├── CNAME
+│   ├── favicon-16x16.png
+│   ├── favicon-32x32.png
+│   ├── favicon.ico
 │   ├── files
-│   └── images
-│       ├── me
-│       ├── projects
-│       └── ui
+│   ├── images
+│   │   ├── me
+│   │   ├── projects
+│   │   │   ├── portrait
+│   │   │   ├── street
+│   │   │   └── travel
+│   │   ├── thumbs
+│   │   │   ├── portrait
+│   │   │   ├── street
+│   │   │   └── travel
+│   │   └── ui
+│   │       └── logo.png
+│   ├── robots.txt
+│   ├── site.webmanifest
+│   └── sitemap.xml
 ├── README.md
 ├── scripts
+│   └── generate-photos.mjs
 ├── src
 │   ├── components
+│   │   ├── Footer.astro
+│   │   ├── Header.astro
+│   │   ├── MicroscopeBackground.astro
+│   │   ├── PhotoCard.astro
+│   │   └── Search.astro
 │   ├── content
 │   ├── data
+│   │   └── photos.json
 │   ├── layouts
+│   │   └── BaseLayout.astro
 │   ├── pages
-│   │   └── index.astro
+│   │   ├── 404.astro
+│   │   ├── gallery
+│   │   │   ├── [collection]
+│   │   │   └── index.astro
+│   │   ├── index.astro
+│   │   └── resources.astro
 │   └── styles
+│       └── global.css
 └── tsconfig.json
 
-15 directories, 8 files
+24 directories, 31 files

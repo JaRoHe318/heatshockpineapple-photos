@@ -1,98 +1,134 @@
 @import "@heatshockpineapple/design-tokens/src/index.css";
 
-/* Layout for photos site */
+/* === 1. THEME VARIABLES (MATCHING BLOG) === */
+:root {
+  /* --- LAYOUT --- */
+  --max-width: 1400px; /* Wider for gallery */
+  
+  /* --- COLORS (Jungle Theme) --- */
+  --bg-body: #fdfbf7; 
+  --bg-paper: #fdfbf7; 
+  --bg-surface: #ffffff;
+
+  /* HEAT (Interaction): Oxblood Red */
+  --accent-primary: #751e29; 
+
+  /* LIGHT (Data): Antique Gold */
+  --accent-secondary: #a87e23; 
+
+  /* LIFE (Structure): Deep Jungle Green */
+  --accent-nature: #243b30; 
+
+  /* ATMOSPHERE */
+  --accent-glow: rgba(36, 59, 48, 0.12);
+  --grid-dot-color: rgba(0, 0, 0, 0.06); /* Paper Texture */
+  
+  /* OVERLAY (Crucial for Header Search) */
+  --overlay-bg: rgba(253, 251, 247, 0.98);
+}
+
+/* --- DARK MODE --- */
+[data-theme="dark"] {
+  --bg-body: #111111;
+  --bg-paper: #111111;
+  --bg-surface: #1a1a1a;
+
+  --accent-primary: #d66c84; /* Rose */
+  --accent-secondary: #d4b059; /* Gold */
+  --accent-nature: #8fbc8f; /* Sea Green */
+
+  --accent-glow: rgba(143, 188, 143, 0.15);
+  --grid-dot-color: rgba(255, 255, 255, 0.05); /* Starfield */
+  
+  --overlay-bg: rgba(17, 17, 17, 0.98);
+}
+
+/* === 2. GLOBAL FOUNDATION === */
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-paper);
+  color: var(--text-body);
+  font-size: 17px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+
+  /* UNIFIED TEXTURE: The Dot Grid */
+  background-image: radial-gradient(var(--grid-dot-color) 1px, transparent 1px);
+  background-size: 32px 32px;
+  background-position: center top;
+}
+
+/* UNIFIED ATMOSPHERE: The Glow */
+body::before {
+  content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+  background-image: 
+    radial-gradient(circle at 10% 20%, var(--accent-glow) 0%, transparent 50%),
+    radial-gradient(circle at 90% 80%, rgba(117, 30, 41, 0.08) 0%, transparent 50%) !important;
+  pointer-events: none;
+}
+
 main {
   max-width: var(--max-width);
   margin: 0 auto;
   padding: 2.5rem 1.5rem 4rem;
+  position: relative;
+  z-index: 2;
 }
 
-/* ===== GALLERY GRID (Masonry Fix) ===== */
+/* === 3. GALLERY GRID (Masonry) === */
 .photo-grid {
-  /* This creates the "Waterfall" effect */
   column-count: 3;
   column-gap: 20px;
-  
-  /* Prevent horizontal scrollbars if images are wide */
   width: 100%;
 }
 
 .photo-card {
-  break-inside: avoid; /* Prevents cutting images in half */
-  margin-bottom: 2rem; /* Vertical gap */
+  break-inside: avoid; /* Prevents cutting images */
+  margin-bottom: 20px;
   position: relative;
-  border-radius: var(--radius);
+  border-radius: 4px; /* Sharper corners to match tech vibe */
   overflow: hidden;
+  background: var(--bg-surface);
+  border: 1px solid var(--border); /* Subtle definition */
+}
+
+/* Ensure images load cleanly */
+.photo-card img {
+  width: 100%;
+  height: auto;
+  display: block;
+  transition: opacity 0.3s ease;
   background: var(--bg-surface);
 }
 
-.photo-card img {
-  width: 100%;
-  height: auto; /* Natural height - NO CROPPING */
-  display: block;
-  transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  filter: brightness(0.95);
-}
-
 .photo-card:hover img {
-  transform: scale(1.03);
-  filter: brightness(1);
+  opacity: 0.95;
 }
 
-/* The "Data" Overlay (EXIF) */
-.photo-overlay {
+/* OVERLAY (Caption on Hover) */
+.card-overlay {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
+  bottom: 0; left: 0; width: 100%;
   padding: 1.5rem 1rem 1rem;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
   color: white;
   opacity: 0;
   transition: opacity 0.3s ease;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  pointer-events: none; /* Let clicks pass through */
+  pointer-events: none;
 }
 
-.photo-card:hover .photo-overlay {
+.photo-card:hover .card-overlay {
   opacity: 1;
 }
 
-.photo-caption {
-  font-family: var(--font-serif);
-  font-size: 0.95rem;
-  font-weight: 500;
-  margin-bottom: 0.25rem;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.photo-exif {
+.overlay-exif {
   font-family: var(--font-mono);
   font-size: 0.75rem;
-  opacity: 0.8;
+  color: rgba(255,255,255,0.9);
   letter-spacing: 0.05em;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
-/* Gear List Styling */
-.gear-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-  margin-top: 1rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--border);
-}
-
-.gear-item {
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  color: var(--text-muted);
-}
-
-/* Responsive */
+/* === 4. RESPONSIVE === */
 @media (max-width: 900px) {
   .photo-grid { column-count: 2; }
 }
@@ -101,70 +137,10 @@ main {
   .photo-grid { column-count: 1; }
 }
 
-.microscope-background {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: -1;
-  background-image:
-    radial-gradient(circle at 15% 50%, var(--accent-glow), transparent 55%),
-    radial-gradient(circle at 80% 10%, rgba(196, 131, 95, 0.06), transparent 45%);
+/* === 5. UTILITIES === */
+::selection {
+  background: rgba(36, 59, 48, 0.15); /* Green Selection */
+  color: inherit;
 }
 
-/* Optional: slightly stronger in dark mode */
-[data-theme="dark"] .microscope-background {
-  background-image:
-    radial-gradient(circle at 20% 60%, rgba(107, 156, 130, 0.25), transparent 60%),
-    radial-gradient(circle at 80% 15%, rgba(212, 153, 111, 0.15), transparent 50%);
-}
-
-/* ===== LIGHTBOX INFO STYLES ===== */
-.lightbox {
-  position: fixed; inset: 0; z-index: 2000;
-  background: rgba(10, 10, 10, 0.95); /* Darker background */
-  display: flex; justify-content: center; align-items: center;
-  opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
-}
-
-.lightbox.open { opacity: 1; pointer-events: auto; }
-
-.lightbox-content {
-  display: flex; flex-direction: column; align-items: center;
-  max-width: 90vw;
-  max-height: 90vh;
-}
-
-.lightbox img {
-  max-width: 100%;
-  max-height: 80vh; /* Leave room for text below */
-  object-fit: contain;
-  border-radius: 4px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-}
-
-.lightbox-info {
-  margin-top: 15px;
-  text-align: center;
-  color: white;
-}
-
-.lb-caption {
-  font-family: var(--font-serif);
-  font-size: 1.1rem;
-  margin: 0 0 5px 0;
-}
-
-.lb-exif {
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  color: rgba(255,255,255,0.6);
-  letter-spacing: 0.05em;
-  margin: 0;
-}
-
-.lightbox-close {
-  position: absolute; top: 20px; right: 20px;
-  background: none; border: none; color: white;
-  font-size: 2.5rem; cursor: pointer; opacity: 0.7;
-}
-.lightbox-close:hover { opacity: 1; }
+/* Note: Custom .lightbox CSS removed in favor of PhotoSwipe */
