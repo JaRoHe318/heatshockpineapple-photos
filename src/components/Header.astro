@@ -1,6 +1,4 @@
 ---
-import Search from "./Search.astro";
-
 // NAVIGATION CONFIG
 const BRAND_LINK = "https://heatshockpineapple.com"; 
 const HOME_LINK = "/"; 
@@ -26,11 +24,6 @@ const currentPath = pathname.slice(1);
         <a href="/resources" class={currentPath.startsWith("resources") ? "active" : ""}>Resources</a>
 
         <div class="mobile-icons">
-          <button class="icon-btn search-trigger" aria-label="Open Search" type="button">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            <span>Search</span>
-          </button>
-          
           <button class="icon-btn theme-trigger" aria-label="Toggle Dark Mode" type="button">
             <span class="theme-text">Theme</span>
             <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
@@ -40,10 +33,6 @@ const currentPath = pathname.slice(1);
       </nav>
 
       <div class="control-separator desktop-only"></div>
-
-      <button class="icon-btn search-trigger desktop-only" aria-label="Open Search" type="button">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-      </button>
 
       <button class="icon-btn theme-trigger desktop-only" aria-label="Toggle Dark Mode" type="button">
         <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
@@ -58,23 +47,12 @@ const currentPath = pathname.slice(1);
   </div>
 </header>
 
-<div id="search-modal" class="search-modal" aria-hidden="true" role="dialog" aria-modal="true">
-  <div class="modal-bg" id="modal-bg" aria-hidden="true"></div>
-  <div class="modal-content" role="document">
-    <Search />
-  </div>
-</div>
-
 <script type="module">
   function setupHeader() {
     let menuToggle = document.getElementById('menu-toggle');
     const nav = document.getElementById('site-nav');
 
-    const searchBtns = document.querySelectorAll('.search-trigger');
-    const searchModal = document.getElementById('search-modal');
-    const modalBg = document.getElementById('modal-bg');
-
-    // Replace node helper
+    // Replace node helper to strip old event listeners
     const replaceWithClone = (el) => {
       if (!el?.parentNode) return el;
       const clone = el.cloneNode(true);
@@ -82,7 +60,7 @@ const currentPath = pathname.slice(1);
       return clone;
     };
 
-    // 1. MOBILE MENU
+    // 1. MOBILE MENU LOGIC
     if (menuToggle && nav) {
       const newToggle = replaceWithClone(menuToggle);
       menuToggle = newToggle;
@@ -101,110 +79,7 @@ const currentPath = pathname.slice(1);
       });
     }
 
-    // 2. MODAL LOGIC & BRIDGE
-    let lastFocusedElement;
-
-    function openModal() {
-      const currentModal = document.getElementById('search-modal');
-      if (!currentModal) return;
-      
-      lastFocusedElement = document.activeElement;
-
-      if (nav) nav.classList.remove('open');
-      if (menuToggle) menuToggle.classList.remove('open');
-
-      currentModal.classList.add('open');
-      currentModal.setAttribute('aria-hidden', 'false');
-      document.body.classList.add('modal-open');
-
-      setTimeout(() => { 
-        const input = currentModal.querySelector('input'); 
-        if (input) input.focus(); 
-      }, 50);
-    }
-
-    function closeModal() {
-      const currentModal = document.getElementById('search-modal');
-      if (!currentModal) return;
-      
-      currentModal.classList.remove('open');
-      currentModal.setAttribute('aria-hidden', 'true');
-      document.body.classList.remove('modal-open');
-      
-      if (lastFocusedElement?.focus) lastFocusedElement.focus();
-    }
-
-    // EXPOSE BRIDGE
-    window.__hspSearch = window.__hspSearch || {};
-    window.__hspSearch.open = openModal;
-    window.__hspSearch.close = closeModal;
-
-    // 3. WIRE TRIGGERS
-    searchBtns.forEach((btn) => {
-      const newBtn = replaceWithClone(btn);
-      newBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        openModal();
-      });
-    });
-
-    const newBg = replaceWithClone(modalBg);
-    newBg?.addEventListener('click', closeModal);
-
-    // 4. GLOBAL KEYDOWN GUARD
-    if (!window.__hspHeaderKeydownBound) {
-      window.__hspHeaderKeydownBound = true;
-
-      document.addEventListener('keydown', (e) => {
-        const activeModal = document.getElementById('search-modal');
-        const isOpen = activeModal?.classList.contains('open');
-
-        // ESCAPE
-        if (e.key === 'Escape' && isOpen) {
-          window.__hspSearch?.close?.();
-          return;
-        }
-
-        // CMD+K
-        const tag = document.activeElement?.tagName?.toLowerCase();
-        const isTyping = tag === 'input' || tag === 'textarea' || document.activeElement?.isContentEditable;
-        
-        if (!isTyping && (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-          e.preventDefault();
-          window.__hspSearch?.open?.();
-          return;
-        }
-
-        // FOCUS TRAP
-        if (isOpen && e.key === 'Tab') {
-          const focusables = activeModal.querySelectorAll(
-            'a[href], button:not([disabled]), input, textarea, select, [tabindex]:not([tabindex="-1"])'
-          );
-          if (focusables.length) {
-            const first = focusables[0];
-            const last = focusables[focusables.length - 1];
-            if (e.shiftKey && document.activeElement === first) {
-              e.preventDefault(); last.focus();
-            } else if (!e.shiftKey && document.activeElement === last) {
-              e.preventDefault(); first.focus();
-            }
-          }
-        }
-      });
-    }
-
-    // 5. GLOBAL RESULT CLICK GUARD
-    if (!window.__hspSearchResultClickBound) {
-      window.__hspSearchResultClickBound = true;
-      document.addEventListener('click', (e) => {
-        const modal = document.getElementById('search-modal');
-        if (!modal?.classList.contains('open')) return;
-        const a = e.target?.closest?.('#search-modal a');
-        if (a) window.__hspSearch?.close?.();
-      });
-    }
-
-    // 6. THEME TOGGLE
+    // 2. THEME TOGGLE LOGIC
     document.querySelectorAll('.theme-trigger').forEach((btn) => {
       const newBtn = replaceWithClone(btn);
       newBtn.addEventListener('click', () => {
@@ -306,23 +181,12 @@ const currentPath = pathname.slice(1);
       flex-direction: column; justify-content: center; align-items: center; gap: 2rem; z-index: 1001;
     }
     .site-nav.open a { font-size: 1.5rem; font-weight: 600; color: #fff; }
-    .mobile-icons { display: flex; gap: 2rem; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.2); }
+    
+    /* Adjusted mobile icons for just theme button */
+    .mobile-icons { 
+      display: flex; gap: 2rem; margin-top: 2rem; padding-top: 2rem; 
+      border-top: 1px solid rgba(255,255,255,0.2); 
+    }
     .mobile-icons .icon-btn { flex-direction: column; gap: 8px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: #fff; }
   }
-
-  /* SEARCH MODAL */
-  .search-modal { position: fixed; inset: 0; z-index: 2000; display: flex; justify-content: center; align-items: flex-start; padding-top: 15vh; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
-  .search-modal.open { opacity: 1; pointer-events: auto; }
-  
-  .modal-bg { 
-    position: absolute; 
-    inset: 0; 
-    background: var(--overlay-bg); /* NEEDS GLOBAL VAR */
-    backdrop-filter: blur(8px); 
-  }
-  
-  .modal-content { position: relative; width: 100%; max-width: 700px; z-index: 2001; animation: slideDown 0.3s ease-out; }
-  @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
-  :global(body.modal-open) { overflow: hidden; }
 </style>

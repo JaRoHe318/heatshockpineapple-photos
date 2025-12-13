@@ -1,45 +1,27 @@
 @import "@heatshockpineapple/design-tokens/src/index.css";
 
-/* === 1. THEME VARIABLES (MATCHING BLOG) === */
+/* === 1. THEME VARIABLES === */
 :root {
-  /* --- LAYOUT --- */
-  --max-width: 1400px; /* Wider for gallery */
-  
-  /* --- COLORS (Jungle Theme) --- */
+  --max-width: 1400px; 
   --bg-body: #fdfbf7; 
   --bg-paper: #fdfbf7; 
   --bg-surface: #ffffff;
-
-  /* HEAT (Interaction): Oxblood Red */
   --accent-primary: #751e29; 
-
-  /* LIGHT (Data): Antique Gold */
   --accent-secondary: #a87e23; 
-
-  /* LIFE (Structure): Deep Jungle Green */
   --accent-nature: #243b30; 
-
-  /* ATMOSPHERE */
   --accent-glow: rgba(36, 59, 48, 0.12);
-  --grid-dot-color: rgba(0, 0, 0, 0.06); /* Paper Texture */
-  
-  /* OVERLAY (Crucial for Header Search) */
+  /* REMOVED: --grid-dot-color */
   --overlay-bg: rgba(253, 251, 247, 0.98);
 }
 
-/* --- DARK MODE --- */
 [data-theme="dark"] {
   --bg-body: #111111;
   --bg-paper: #111111;
   --bg-surface: #1a1a1a;
-
-  --accent-primary: #d66c84; /* Rose */
-  --accent-secondary: #d4b059; /* Gold */
-  --accent-nature: #8fbc8f; /* Sea Green */
-
+  --accent-primary: #d66c84;
+  --accent-secondary: #d4b059;
+  --accent-nature: #8fbc8f;
   --accent-glow: rgba(143, 188, 143, 0.15);
-  --grid-dot-color: rgba(255, 255, 255, 0.05); /* Starfield */
-  
   --overlay-bg: rgba(17, 17, 17, 0.98);
 }
 
@@ -52,13 +34,13 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 
-  /* UNIFIED TEXTURE: The Dot Grid */
-  background-image: radial-gradient(var(--grid-dot-color) 1px, transparent 1px);
-  background-size: 32px 32px;
-  background-position: center top;
+  /* REMOVED: The radial-gradient dot grid is gone. 
+     Now the <MicroscopeBackground /> will be visible. */
 }
 
-/* UNIFIED ATMOSPHERE: The Glow */
+/* KEEPER: This Atmospheric Glow sits at z-index: -1.
+   Your Microscope is z-index: -2. 
+   Result: Particles float subtly *behind* the glow. Perfect depth. */
 body::before {
   content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
   background-image: 
@@ -83,16 +65,15 @@ main {
 }
 
 .photo-card {
-  break-inside: avoid; /* Prevents cutting images */
+  break-inside: avoid;
   margin-bottom: 20px;
   position: relative;
-  border-radius: 4px; /* Sharper corners to match tech vibe */
+  border-radius: 4px;
   overflow: hidden;
   background: var(--bg-surface);
-  border: 1px solid var(--border); /* Subtle definition */
+  border: 1px solid var(--border); 
 }
 
-/* Ensure images load cleanly */
 .photo-card img {
   width: 100%;
   height: auto;
@@ -101,11 +82,9 @@ main {
   background: var(--bg-surface);
 }
 
-.photo-card:hover img {
-  opacity: 0.95;
-}
+.photo-card:hover img { opacity: 0.95; }
 
-/* OVERLAY (Caption on Hover) */
+/* OVERLAY */
 .card-overlay {
   position: absolute;
   bottom: 0; left: 0; width: 100%;
@@ -117,9 +96,7 @@ main {
   pointer-events: none;
 }
 
-.photo-card:hover .card-overlay {
-  opacity: 1;
-}
+.photo-card:hover .card-overlay { opacity: 1; }
 
 .overlay-exif {
   font-family: var(--font-mono);
@@ -129,18 +106,11 @@ main {
 }
 
 /* === 4. RESPONSIVE === */
-@media (max-width: 900px) {
-  .photo-grid { column-count: 2; }
-}
-
-@media (max-width: 600px) {
-  .photo-grid { column-count: 1; }
-}
+@media (max-width: 900px) { .photo-grid { column-count: 2; } }
+@media (max-width: 600px) { .photo-grid { column-count: 1; } }
 
 /* === 5. UTILITIES === */
 ::selection {
-  background: rgba(36, 59, 48, 0.15); /* Green Selection */
+  background: rgba(36, 59, 48, 0.15);
   color: inherit;
 }
-
-/* Note: Custom .lightbox CSS removed in favor of PhotoSwipe */

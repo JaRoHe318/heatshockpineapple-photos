@@ -59,9 +59,9 @@ const socialImageURL = new URL(image, Astro.site).href;
   <body>
     <MicroscopeBackground />
 
-    <Header currentPath={Astro.url.pathname} />
+    <Header />
       
-    <main id="main-gallery" class="global-wrapper pswp-gallery" data-pagefind-body>
+    <main id="main-gallery" class="global-wrapper pswp-gallery">
       <slot />
     </main>
       
@@ -78,7 +78,8 @@ const socialImageURL = new URL(image, Astro.site).href;
           gallery: '#main-gallery', 
           children: 'a.pswp-link',
           pswpModule: PhotoSwipe,
-          bgOpacity: 0.95,
+          // We keep opacity high so the theme color is rich/visible
+          bgOpacity: 0.95, 
           showHideOpacity: true,
           wheelToZoom: true,
           paddingFn: (viewportSize) => {
@@ -123,16 +124,14 @@ const socialImageURL = new URL(image, Astro.site).href;
 </html>
 
 <style>
-  /* GLOBAL WRAPPER 
-     This now ONLY controls the content area (Photos/Text), 
-     letting Header/Footer stretch to the edges.
-  */
   .global-wrapper {
     width: 100%;
-    max-width: 1400px; /* Increased from 1100px for a more modern, wide feel */
+    max-width: 1400px; 
     margin: 0 auto;
     padding: 0 24px;
-    min-height: 80vh; /* Ensures footer stays at bottom on short pages */
+    min-height: 80vh; 
+    position: relative;
+    z-index: 2; 
   }
 
   @media (min-width: 768px) { 
@@ -141,37 +140,34 @@ const socialImageURL = new URL(image, Astro.site).href;
     } 
   }
 
-  /* --- CINEMATIC LIGHTBOX CAPTION (Kept your existing fixes) --- */
+  /* --- THEME-AWARE LIGHTBOX BACKGROUND --- */
+  /* This forces the lightbox to match your Day (Cream) or Night (Dark) theme */
+  :global(.pswp__bg) {
+    background: var(--bg-body) !important;
+    transition: background-color 0.3s ease; /* Smooth transition if user toggles theme while open */
+  }
+
+  /* --- LIGHTBOX CAPTION STYLES --- */
   :global(.pswp__custom-caption) {
     position: absolute;
     bottom: 0; 
     left: 0;
     width: 100%;
-    background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.6) 50%, transparent 100%);
-    padding: 6rem 1.5rem 3rem 1.5rem;
+    /* Dark gradient ensures white text is readable even on Cream background */
+    background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
+    padding: 4rem 1.5rem 2rem 1.5rem;
     text-align: center;
-    color: rgba(255, 255, 255, 0.98);
+    color: rgba(255, 255, 255, 0.9);
     pointer-events: none;
     z-index: 2000;
   }
   
-  :global(.pswp__custom-caption .caption-title) {
-    font-family: var(--font-serif);
-    font-size: 1.75rem;
-    font-weight: 500;
-    line-height: 1.1;
-    display: block;
-    margin-bottom: 0.5rem;
-    text-shadow: 0 2px 15px rgba(0,0,0,0.8);
-  }
-  
   :global(.pswp__custom-caption small) {
     font-family: var(--font-mono);
-    font-size: 0.95rem;
-    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.85);
     display: block;
     letter-spacing: 0.05em;
-    text-transform: uppercase;
-    text-shadow: 0 1px 5px rgba(0,0,0,0.8);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
   }
 </style>
