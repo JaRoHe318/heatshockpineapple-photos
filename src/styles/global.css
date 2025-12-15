@@ -100,7 +100,26 @@ main {
 
 /* Responsive Grid */
 @media (max-width: 1024px) { .photo-grid { column-count: 2; } }
-@media (max-width: 600px)  { .photo-grid { column-count: 1; } }
+
+/* Targets the standard mobile phone breakpoint */
+@media (max-width: 600px) {
+    .photo-grid {
+        /* This is the key override for the "3-at-a-time" stream on phones */
+        column-count: 3 !important;
+        
+        /* Reduce the gap aggressively so three columns fit */
+        column-gap: 0.5rem !important; 
+    }
+}
+
+/* Optional: Targets the tablet/mid-size view */
+@media (min-width: 601px) and (max-width: 900px) {
+    .photo-grid {
+        /* Keep it at 2 columns for a slightly better tablet experience */
+        column-count: 2 !important;
+        column-gap: 1rem !important;
+    }
+}
 
 /* =========================================
    5. UTILITIES & ACCESSIBILITY

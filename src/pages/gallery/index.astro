@@ -143,7 +143,30 @@ const randomStream = allPhotos
   }
   
   @media (max-width: 900px) {
-    .nav-grid { grid-template-columns: 1fr; }
+    /* .nav-grid { grid-template-columns: 1fr; } */
+    .nav-grid { 
+        grid-template-columns: repeat(3, 1fr); 
+        gap: 8px; /* Tighter gap for mobile */
+    }
+  }
+
+    /* Targets the standard mobile phone breakpoint */
+  @media (max-width: 600px) {
+      
+      /* 1. REDUCE GAP BELOW COLLECTIONS */
+      .collections-nav { 
+          /* Change from 5rem (desktop) to 2rem (mobile) */
+          margin-bottom: 2rem; 
+      }
+
+      /* 2. REDUCE GAP ABOVE STREAM TOOLBAR */
+      .stream-toolbar {
+          /* Remove the top padding/margin you had, or shrink it */
+          padding-top: 0rem; 
+          margin-top: 0rem;
+          /* Shrink the bottom margin slightly too */
+          margin-bottom: 1.5rem;
+      }
   }
 
   .nav-card { text-decoration: none; group: pointer; }
