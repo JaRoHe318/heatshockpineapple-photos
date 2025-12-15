@@ -78,6 +78,7 @@ const displayTitle = collection.charAt(0).toUpperCase() + collection.slice(1);
   {streamPhotos.length > 0 && (
     <section class="stream-section">
       {albumCards.length > 0 && <h2 class="section-label">Stream</h2>}
+      
       <div class="photo-grid">
         {streamPhotos.map((photo) => (
           <PhotoCard photo={photo} />
@@ -89,7 +90,7 @@ const displayTitle = collection.charAt(0).toUpperCase() + collection.slice(1);
 </BaseLayout>
 
 <style>
-  .collection-header { margin: 2rem 0 3rem 0; border-bottom: 1px solid var(--border); padding-bottom: 2rem; }
+  .collection-header { margin: 0 0 3rem 0; border-bottom: 1px solid var(--border); padding-bottom: 2rem; }
   .back-link { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); text-decoration: none; }
   .collection-title { font-family: var(--font-serif); font-size: 3rem; margin: 0.5rem 0; color: var(--text-main); text-transform: capitalize; }
   .collection-count { font-family: var(--font-mono); color: var(--text-muted); }

@@ -1,6 +1,12 @@
 .
 ├── astro.config.mjs
 ├── LICENSE
+├── originals
+│   ├── IMG_9071.jpeg
+│   ├── portrait
+│   ├── street
+│   │   └── SF
+│   └── travel
 ├── package-lock.json
 ├── package.json
 ├── photos_tree.txt
@@ -14,11 +20,11 @@
 │   ├── favicon.ico
 │   ├── files
 │   ├── images
-│   │   ├── me
-│   │   ├── projects
+│   │   ├── full
 │   │   │   ├── portrait
 │   │   │   ├── street
 │   │   │   └── travel
+│   │   ├── me
 │   │   ├── thumbs
 │   │   │   ├── portrait
 │   │   │   ├── street
@@ -36,8 +42,7 @@
 │   │   ├── Footer.astro
 │   │   ├── Header.astro
 │   │   ├── MicroscopeBackground.astro
-│   │   ├── PhotoCard.astro
-│   │   └── Search.astro
+│   │   └── PhotoCard.astro
 │   ├── content
 │   ├── data
 │   │   └── photos.json
@@ -54,4 +59,4 @@
 │       └── global.css
 └── tsconfig.json
 
-24 directories, 31 files
+29 directories, 31 files

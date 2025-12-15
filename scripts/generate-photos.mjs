@@ -1,3 +1,4 @@
+/* scripts/generate-photos.mjs */
 import fs from 'fs-extra';
 import path from 'path';
 import sharp from 'sharp';
@@ -5,7 +6,7 @@ import { glob } from 'glob';
 import exifParser from 'exif-parser';
 
 // CONFIGURATION
-const PROJECTS_DIR = 'originals'; // Private source folder (NOT deployed)
+const PROJECTS_DIR = 'originals'; // Private source folder
 const THUMBS_DIR = 'public/images/thumbs';
 const FULL_DIR = 'public/images/full';
 const DATA_FILE = 'src/data/photos.json';
@@ -25,7 +26,6 @@ async function generate() {
   // Guard: Ensure source exists
   if (!(await fs.pathExists(PROJECTS_DIR))) {
     console.error(`❌ Source directory "${PROJECTS_DIR}" not found.`);
-    console.error(`   Please move your photo folders into a root "${PROJECTS_DIR}" folder.`);
     process.exit(1);
   }
 
@@ -43,116 +43,91 @@ async function generate() {
   };
 
   const seen = new Set();
-
-  const images = await glob(
-    `${PROJECTS_DIR}/**/*.{jpg,jpeg,png,webp,JPG,JPEG,PNG,WEBP}`
-  );
-
+  const images = await glob(`${PROJECTS_DIR}/**/*.{jpg,jpeg,png,webp,JPG,JPEG,PNG,WEBP}`);
   const photos = [];
 
-  for (const filePath of images) {
+for (const filePath of images) {
     const relativePath = path.relative(PROJECTS_DIR, filePath);
-
-    // Cross-platform normalized key
     const relKey = relativePath.split(path.sep).join('/');
 
-    // Dedup
     if (seen.has(relKey)) continue;
     seen.add(relKey);
 
     const pathParts = relKey.split('/');
+    
+    // === NEW LOGIC START ===
+    let category = 'uncategorized'; // Label root photos as this
+    let album = null;
 
-    // Guard: require category folder
-    if (pathParts.length < 2) {
-      console.warn(`⚠️  Skipping file in root (needs a category folder): ${relativePath}`);
-      stats.failed++;
-      continue;
+    if (pathParts.length >= 2) {
+      category = pathParts[0];
+      album = pathParts.length > 2 ? pathParts.slice(1, -1).join('/') : null;
     }
+    // === NEW LOGIC END ===
 
-    const category = pathParts[0];
-    const album = pathParts.length > 2 ? pathParts.slice(1, -1).join('/') : null;
-
-    // Collision-proof id
     const id = relKey.replace(/\.[^/.]+$/, '').split('/').join('__');
 
-    // Output paths (force .jpg)
-    const outRelKey = relKey.replace(/\.(jpe?g|png|webp)$/i, '.jpg');
-    const outRelFs = outRelKey.split('/').join(path.sep);
+    // WEB PATHS
+    const outBase = relKey.replace(/\.(jpe?g|png|webp)$/i, '');
+    // This will put root photos directly in /images/thumbs/photo.jpg
+    const webThumbPath = `/images/thumbs/${outBase}.jpg`;
+    const webFullPath = `/images/full/${outBase}.jpg`;
 
-    const destThumbPath = path.join(THUMBS_DIR, outRelFs);
-    const destFullPath = path.join(FULL_DIR, outRelFs);
+    // FILE SYSTEM PATHS
+    const outRelFs = outBase.split('/').join(path.sep);
+    const destThumbBase = path.join(THUMBS_DIR, outRelFs);
+    const destFullBase = path.join(FULL_DIR, outRelFs);
 
-    // Web paths (always forward slashes)
-    const webThumbPath = `/images/thumbs/${outRelKey}`;
-    const webFullPath = `/images/full/${outRelKey}`;
-
-    await fs.ensureDir(path.dirname(destThumbPath));
-    await fs.ensureDir(path.dirname(destFullPath));
+    await fs.ensureDir(path.dirname(destThumbBase));
+    await fs.ensureDir(path.dirname(destFullBase));
 
     try {
-      const srcStat = await fs.stat(filePath);
-
-      // Cache checks
-      let genThumb = true;
-      let genFull = true;
-
-      if (await fs.pathExists(destThumbPath)) {
-        const destStat = await fs.stat(destThumbPath);
-        if (destStat.mtimeMs >= srcStat.mtimeMs) genThumb = false;
-      }
-
-      if (await fs.pathExists(destFullPath)) {
-        const destStat = await fs.stat(destFullPath);
-        if (destStat.mtimeMs >= srcStat.mtimeMs) genFull = false;
-      }
-
-      // Read source once (needed for EXIF + potential generation)
       const buffer = await fs.readFile(filePath);
-
-      // Dimension truth source: the /full file on disk
       let finalWidth = 0;
       let finalHeight = 0;
 
-      // A) Full export (metadata stripped)
-      if (genFull) {
-        const info = await sharp(buffer)
-          .rotate()
-          .resize({ width: FULL_WIDTH, withoutEnlargement: true })
-          .jpeg({ quality: FULL_QUALITY, mozjpeg: true })
-          .toFile(destFullPath);
+      // === GENERATE FORMATS ===
+      const formats = ['jpg', 'webp'];
 
-        if (!info.width || !info.height) {
-          throw new Error(`Generated full missing dimensions: ${destFullPath}`);
+      for (const format of formats) {
+        const ext = `.${format}`;
+        const thumbPath = `${destThumbBase}${ext}`;
+        const fullPath = `${destFullBase}${ext}`;
+        const isWebP = format === 'webp';
+        
+        // 1. Generate FULL
+        let processFull = true;
+        if (await fs.pathExists(fullPath)) processFull = false;
+
+        if (processFull) {
+          const pipeline = sharp(buffer).rotate().resize({ width: FULL_WIDTH, withoutEnlargement: true });
+          if (isWebP) {
+             await pipeline.webp({ quality: FULL_QUALITY }).toFile(fullPath);
+          } else {
+             const info = await pipeline.jpeg({ quality: FULL_QUALITY, mozjpeg: true }).toFile(fullPath);
+             finalWidth = info.width;
+             finalHeight = info.height;
+             stats.generatedFulls++;
+          }
+        } else if (!isWebP) {
+           const meta = await sharp(fullPath).metadata();
+           finalWidth = meta.width;
+           finalHeight = meta.height;
         }
 
-        finalWidth = info.width;
-        finalHeight = info.height;
-        stats.generatedFulls++;
-      } else {
-        const meta = await sharp(destFullPath).metadata();
-
-        if (!meta.width || !meta.height) {
-          throw new Error(`Cached full missing dimensions: ${destFullPath}`);
+        // 2. Generate THUMB
+        if (!(await fs.pathExists(thumbPath))) {
+          const pipeline = sharp(buffer).rotate().resize({ width: THUMB_WIDTH, withoutEnlargement: true });
+          if (isWebP) {
+            await pipeline.webp({ quality: THUMB_QUALITY }).toFile(thumbPath);
+          } else {
+            await pipeline.jpeg({ quality: THUMB_QUALITY, mozjpeg: true }).toFile(thumbPath);
+          }
+          stats.generatedThumbs++;
         }
-
-        finalWidth = meta.width;
-        finalHeight = meta.height;
       }
 
-      // B) Thumb export
-      if (genThumb) {
-        await sharp(buffer)
-          .rotate()
-          .resize({ width: THUMB_WIDTH, withoutEnlargement: true })
-          .jpeg({ quality: THUMB_QUALITY, mozjpeg: true })
-          .toFile(destThumbPath);
-
-        stats.generatedThumbs++;
-      }
-
-      if (!genThumb && !genFull) stats.skipped++;
-
-      // C) EXIF display string (from ORIGINAL buffer; not published)
+      // === EXIF ===
       let exifString = '';
       try {
         const parser = exifParser.create(buffer);
@@ -160,30 +135,29 @@ async function generate() {
         if (result.tags) {
           const camera = cleanModel(result.tags.Model);
           const focal = result.tags.FocalLength ? `${result.tags.FocalLength}mm` : '';
-
           let aperture = '';
-          if (result.tags.FNumber) {
-            aperture = `f/${Number(result.tags.FNumber).toFixed(1).replace(/\.0$/, '')}`;
-          }
-
-          const parts = [camera, focal, aperture].filter(Boolean);
-          exifString = parts.join(' · ');
+          if (result.tags.FNumber) aperture = `f/${Number(result.tags.FNumber).toFixed(1).replace(/\.0$/, '')}`;
+          exifString = [camera, focal, aperture].filter(Boolean).join(' · ');
         }
-      } catch {
-        // ignore EXIF errors
-      }
+      } catch {}
 
-      // === UPDATED LOGIC START ===
-      // Removed filename parsing. Just use generic Alt Text.
-      const altText = `${category} Photograph`;
-      // === UPDATED LOGIC END ===
+      // === SMART ALT TEXT ===
+      const filenameBase = path.basename(filePath, path.extname(filePath));
+      const isGeneric = /^(IMG|DSC|_DSC|P\d+|[\d\-_]+$)/i.test(filenameBase);
+      const altParts = [];
+      
+      if (!isGeneric) altParts.push(filenameBase.replace(/[-_]/g, ' '));
+      if (album) altParts.push(album === 'SF' ? 'San Francisco' : album);
+      if (category) altParts.push(category); // "Stream" will appear in alt text for root photos
+      altParts.push('photograph');
+      const altText = altParts.join(' ');
 
       photos.push({
         id,
         src: webThumbPath,
         full: webFullPath,
         alt: altText,
-        collection: category, // compatibility
+        collection: category, // This will categorize them as "stream"
         category,
         album,
         exif: exifString,
@@ -195,7 +169,6 @@ async function generate() {
     } catch (err) {
       console.error(`⚠️  Skipping: ${relativePath}`, err?.message ?? err);
       stats.failed++;
-      continue;
     }
   }
 
@@ -207,9 +180,8 @@ async function generate() {
 -----------------------------------
 Source:         ${PROJECTS_DIR}
 Total Photos:   ${stats.total}
-Thumbs Gen:     ${stats.generatedThumbs}
-Fulls Gen:      ${stats.generatedFulls}
-Cached:         ${stats.skipped}
+Thumbs Gen:     ${stats.generatedThumbs} (JPG+WebP)
+Fulls Gen:      ${stats.generatedFulls} (JPG+WebP)
 Failed:         ${stats.failed}
 -----------------------------------
 `);

@@ -1,4 +1,5 @@
 ---
+/* src/components/Footer.astro */
 const currentYear = new Date().getFullYear();
 ---
 
@@ -22,16 +23,17 @@ const currentYear = new Date().getFullYear();
 <style>
   .site-footer {
     width: 100%;
-    /* DEEP GREEN BACKGROUND */
-    background: #243b30;
-    color: #ffffff;
+    /* TOKEN: Matches Header Background */
+    background: var(--color-jungle-800);
+    /* TOKEN: Matches Header Text */
+    color: var(--text-inverse);
     margin-top: 6rem;
     padding: 3rem 0;
   }
 
   .footer-inner {
     width: 100%;
-    max-width: 1600px; /* Matches Header */
+    max-width: 1600px;
     margin: 0 auto;
     padding: 0 2rem;
     display: flex;
@@ -39,7 +41,6 @@ const currentYear = new Date().getFullYear();
     gap: 2rem;
   }
 
-  /* DESKTOP: Row Layout */
   @media (min-width: 768px) {
     .footer-inner {
       flex-direction: row;
@@ -59,14 +60,14 @@ const currentYear = new Date().getFullYear();
     font-family: var(--font-serif);
     font-size: 1.25rem;
     font-weight: 600;
-    color: #ffffff;
-    word-spacing: -0.15em; /* Matches Header */
+    color: var(--text-inverse);
+    word-spacing: -0.15em; 
   }
 
+  /* .gold class is handled by global.css utility */
   .gold {
-    color: var(--accent-secondary);
     font-style: normal;
-    margin-left: 0.2em; /* Small gap logic */
+    margin-left: 0.2em;
   }
 
   .copyright {
@@ -92,6 +93,6 @@ const currentYear = new Date().getFullYear();
   }
 
   .footer-links a:hover {
-    color: #ffffff;
+    color: var(--text-inverse);
   }
 </style>

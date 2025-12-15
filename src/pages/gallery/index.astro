@@ -1,5 +1,5 @@
 ---
-// FIX: Add extra "../" to all these imports
+/* src/pages/gallery/index.astro */
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import PhotoCard from "../../components/PhotoCard.astro";
 import photosData from "../../data/photos.json";
@@ -9,7 +9,6 @@ const allPhotos = photosData.photos || [];
 // --- 1. PREPARE COLLECTIONS ---
 const customOrder = ['Portrait', 'Street', 'Travel']; 
 
-// Step A: Get the sorted list of names
 const uniqueCollections = [...new Set(allPhotos.map(p => p.collection))]
   .filter(c => c !== 'uncategorized')
   .sort((a, b) => {
@@ -21,29 +20,27 @@ const uniqueCollections = [...new Set(allPhotos.map(p => p.collection))]
     return a.localeCompare(b);
   });
 
-// Step B: Turn those names into Data Objects (MISSING IN YOUR CODE)
 const collections = uniqueCollections.map(name => {
   const photosInCol = allPhotos.filter(p => p.collection === name);
   return {
     name: name,
     count: photosInCol.length,
-    cover: photosInCol[0]?.src // Grab first photo as cover
+    cover: photosInCol[0]?.src
   };
 });
 
-// --- 2. PREPARE THE STREAM ---
+// --- 2. PREPARE STREAM ---
 const randomStream = allPhotos
   .sort(() => 0.5 - Math.random())
   .slice(0, 15);
 ---
+
 <BaseLayout title="Gallery" description="Browse gallery and featured shots.">
   
-<header class="gallery-header">
-    <h1 class="page-title">Gallery.</h1>
+  <header class="gallery-header">
+    <h1 class="page-title">Gallery</h1>
     <p class="page-desc">Explore by series or wander through the stream.</p>
   </header>
-
-
 
   <section class="collections-nav">
     <div class="nav-grid">
@@ -64,27 +61,63 @@ const randomStream = allPhotos
     </div>
   </section>
 
-  <div class="divider">
+  <div class="stream-toolbar">
     <span class="divider-text">Featured Stream</span>
+    
+    <div class="divider-line"></div>
+
+    <button id="shuffle-btn" class="btn-shuffle" aria-label="Shuffle Stream">
+      Shuffle ↻
+    </button>
   </div>
 
-  <section class="photo-grid">
+  <section class="photo-grid" id="stream-grid">
     {randomStream.map((photo) => (
       <PhotoCard photo={photo} />
     ))}
   </section>
 
-  <div class="stream-footer">
-    <button class="btn-refresh" onclick="window.location.reload();">
-      Shuffle Stream ↻
-    </button>
-  </div>
+  <div class="spacer-bottom"></div>
 
 </BaseLayout>
 
+<script>
+  /* --- SHUFFLE LOGIC --- */
+  document.addEventListener('astro:page-load', () => {
+    const btn = document.getElementById('shuffle-btn');
+    const grid = document.getElementById('stream-grid');
+
+    if (btn && grid) {
+      btn.addEventListener('click', () => {
+        // Visual Feedback (Spin the icon?)
+        const originalText = btn.innerHTML;
+        btn.innerHTML = "↻"; 
+        btn.style.opacity = "0.7";
+        btn.style.pointerEvents = "none";
+
+        const photos = Array.from(grid.children);
+
+        // Fisher-Yates Shuffle
+        for (let i = photos.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [photos[i], photos[j]] = [photos[j], photos[i]];
+        }
+
+        photos.forEach(photo => grid.appendChild(photo));
+
+        setTimeout(() => { 
+          btn.innerHTML = originalText; 
+          btn.style.opacity = "1";
+          btn.style.pointerEvents = "auto";
+        }, 300);
+      });
+    }
+  });
+</script>
+
 <style>
   .gallery-header {
-    margin-top: 4rem;
+    margin-top: 0;
     margin-bottom: 3rem;
   }
   
@@ -101,27 +134,22 @@ const randomStream = allPhotos
   }
 
   /* --- Gallery NAV --- */
-  .collections-nav {
-    margin-bottom: 5rem;
-  }
+  .collections-nav { margin-bottom: 5rem; }
 
   .nav-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr); /* Force 3 columns for your 3 collections */
+    grid-template-columns: repeat(3, 1fr); 
     gap: 20px;
   }
   
-  @media (max-width: 768px) {
-    .nav-grid { grid-template-columns: 1fr; } /* Stack on mobile */
+  @media (max-width: 900px) {
+    .nav-grid { grid-template-columns: 1fr; }
   }
 
-  .nav-card {
-    text-decoration: none;
-    group: pointer;
-  }
+  .nav-card { text-decoration: none; group: pointer; }
 
   .nav-img-box {
-    aspect-ratio: 16/9; /* Widescreen cards */
+    aspect-ratio: 16/9;
     border-radius: var(--radius);
     overflow: hidden;
     position: relative;
@@ -135,10 +163,17 @@ const randomStream = allPhotos
     filter: grayscale(30%);
   }
 
-  .nav-card:hover img {
-    transform: scale(1.05);
-    filter: grayscale(0%);
+  .nav-card:hover img { transform: scale(1.05); filter: grayscale(0%); }
+
+  .nav-overlay {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.2);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.3s ease;
   }
+
+  .nav-card:hover .nav-overlay { opacity: 1; }
+  .arrow { color: white; font-size: 1.5rem; border: 1px solid white; padding: 5px 12px; border-radius: 50%; }
 
   .nav-title {
     font-family: var(--font-serif);
@@ -149,25 +184,16 @@ const randomStream = allPhotos
   }
 
   .nav-count {
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    color: var(--text-muted);
+    font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted);
   }
 
-  /* --- DIVIDER --- */
-  .divider {
+  /* --- NEW TOOLBAR STYLES --- */
+  .stream-toolbar {
     display: flex;
     align-items: center;
-    gap: 1rem;
-    margin: 0 0 3rem 0;
-    opacity: 0.5;
-  }
-  
-  .divider::after {
-    content: "";
-    flex: 1;
-    height: 1px;
-    background: var(--border);
+    gap: 1.5rem;
+    margin: 0 0 2rem 0;
+    padding-top: 2rem;
   }
 
   .divider-text {
@@ -176,29 +202,35 @@ const randomStream = allPhotos
     text-transform: uppercase;
     letter-spacing: 0.15em;
     color: var(--text-muted);
+    white-space: nowrap; /* Prevents text from breaking */
+  }
+  
+  /* The Line */
+  .divider-line {
+    flex: 1; /* This makes the line grow to fill empty space */
+    height: 1px;
+    background: var(--border);
+    opacity: 0.5;
   }
 
-  /* --- FOOTER --- */
-  .stream-footer {
-    margin-top: 4rem;
-    display: flex;
-    justify-content: center;
-  }
-
-  .btn-refresh {
+  /* The Button */
+  .btn-shuffle {
     background: transparent;
     border: 1px solid var(--border);
-    padding: 10px 20px;
+    padding: 6px 16px;
     border-radius: 50px;
     font-family: var(--font-mono);
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     color: var(--text-muted);
     cursor: pointer;
     transition: all 0.2s ease;
+    white-space: nowrap;
   }
-  
-  .btn-refresh:hover {
+
+  .btn-shuffle:hover {
     border-color: var(--text-main);
     color: var(--text-main);
   }
+
+  .spacer-bottom { height: 4rem; }
 </style>

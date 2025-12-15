@@ -2,11 +2,22 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import photosData from "../data/photos.json";
 
-// 1. Get 5 random photos for the "Film Strip"
+// 1. DATA LOGIC
 const allPhotos = photosData.photos || [];
-const randomStrip = allPhotos
-  .sort(() => 0.5 - Math.random())
-  .slice(0, 5);
+
+// Shuffle the photos
+let randomStrip = allPhotos.sort(() => 0.5 - Math.random());
+
+// 2. FILL THE SCREEN
+// If we have fewer than 15 photos, duplicate the array until it's long enough.
+// This prevents the "Black Void" on wide screens.
+while (randomStrip.length < 15 && randomStrip.length > 0) {
+  randomStrip = [...randomStrip, ...randomStrip];
+}
+
+// 3. SLICE LIMIT
+// Cap at 15 frames (~3000px width), covering 99% of monitors.
+randomStrip = randomStrip.slice(0, 15);
 ---
 
 <BaseLayout title="Resources" description="Gear, software, and inspiration.">
@@ -19,6 +30,7 @@ const randomStrip = allPhotos
   <section class="film-strip-container">
     <div class="film-strip">
       {randomStrip.map((photo, index) => (
+        /* CHANGED: Swapped <a> back to <div> and removed href */
         <div class="film-frame">
           <img src={photo.src} alt="" loading="lazy" />
           <span class="frame-number">{index + 1}A</span>
@@ -97,7 +109,7 @@ const randomStrip = allPhotos
 
 <style>
   .page-header {
-    margin-top: 4rem;
+    margin-top: 0;
     margin-bottom: 4rem;
   }
   
@@ -118,25 +130,41 @@ const randomStrip = allPhotos
   .film-strip-container {
     margin: 4rem 0 6rem 0;
     width: 100%;
-    overflow: hidden; /* Hide overflow if frames stick out */
+    position: relative; 
+    overflow: hidden; 
+    
+    /* VIGNETTE MASK: Fades edges for a cinematic look on desktop */
+    mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
   }
 
   .film-strip {
     display: flex;
-    gap: 2px; /* Tiny gap between frames */
-    background: #000; /* Black film backing */
+    justify-content: center; /* Centers content on ultra-wide screens */
+    gap: 2px; 
+    background: #000;
     padding: 10px 0;
-    overflow-x: auto; /* Scrollable on mobile */
-    scrollbar-width: none; /* Hide scrollbar Firefox */
+    
+    /* Scroll on mobile */
+    overflow-x: auto; 
+    scrollbar-width: none;
   }
-  .film-strip::-webkit-scrollbar { display: none; /* Hide scrollbar Chrome */ }
+  .film-strip::-webkit-scrollbar { display: none; }
+
+  @media (max-width: 768px) {
+    .film-strip { justify-content: flex-start; }
+    /* Disable mask on mobile to allow full edge-to-edge scrolling */
+    .film-strip-container { mask-image: none; -webkit-mask-image: none; }
+  }
 
   .film-frame {
-    flex: 0 0 200px; /* Fixed width frames */
+    display: block; 
+    flex: 0 0 200px;
     height: 150px;
     position: relative;
     background: #111;
     overflow: hidden;
+    /* REMOVED: cursor: pointer; */
   }
 
   .film-frame img {
@@ -144,13 +172,14 @@ const randomStrip = allPhotos
     height: 100%;
     object-fit: cover;
     opacity: 0.8;
-    filter: grayscale(100%); /* B&W Contact sheet look */
-    transition: all 0.3s ease;
+    filter: grayscale(100%);
+    transition: all 0.4s ease;
   }
 
   .film-frame:hover img {
     opacity: 1;
     filter: grayscale(0%);
+    transform: scale(1.05); 
   }
 
   .frame-number {
@@ -159,9 +188,10 @@ const randomStrip = allPhotos
     right: 6px;
     font-family: var(--font-mono);
     font-size: 0.6rem;
-    color: #ffd700; /* Film yellow text */
+    color: #ffd700;
     text-shadow: 0 1px 2px rgba(0,0,0,0.8);
     opacity: 0.7;
+    pointer-events: none;
   }
 
   /* --- LISTS --- */

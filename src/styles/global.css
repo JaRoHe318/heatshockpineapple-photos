@@ -1,116 +1,135 @@
+/* =========================================
+   1. DESIGN TOKENS (The DNA)
+   ========================================= */
+/* Import the core variables (Colors, Fonts, Spacing) */
 @import "@heatshockpineapple/design-tokens/src/index.css";
 
-/* === 1. THEME VARIABLES === */
+/* =========================================
+   2. THEME LOGIC (The "Brain")
+   ========================================= */
+
+/* --- LIGHT MODE (Default) --- */
 :root {
-  --max-width: 1400px; 
-  --bg-body: #fdfbf7; 
-  --bg-paper: #fdfbf7; 
-  --bg-surface: #ffffff;
-  --accent-primary: #751e29; 
-  --accent-secondary: #a87e23; 
-  --accent-nature: #243b30; 
-  --accent-glow: rgba(36, 59, 48, 0.12);
-  /* REMOVED: --grid-dot-color */
-  --overlay-bg: rgba(253, 251, 247, 0.98);
+  /* BACKGROUNDS: The "Archival" look */
+  --bg-paper: #fdfbf7;        /* Warm Cream (Page Background) */
+  --bg-surface: #ffffff;      /* Pure White (Cards/Panels) */
+  
+  /* TEXT: High contrast but not harsh */
+  --text-main: #2c2c2c;       /* Soft Charcoal */
+  --text-inverse: #ffffff;    /* Text on dark buttons/headers */
+  --text-muted: rgba(0, 0, 0, 0.6);
+  
+  /* BORDERS */
+  --border: rgba(0, 0, 0, 0.1);
+  --border-strong: rgba(0, 0, 0, 0.2);
+
+  /* BRANDING & ACCENTS */
+  --category-photos: #2a9d8f;                  /* Teal */
+  --category-journal: var(--color-heat-900);   /* Heat Red */
+  --accent-primary: var(--color-heat-900);
+  --accent-highlight: var(--brand-secondary);  /* Gold */
+  
+  /* UI MAPPINGS */
+  --focus-ring: var(--category-photos);
+  --radius: 8px; /* Standard border radius */
 }
 
+/* --- DARK MODE (The Override) --- */
+/* This automatically activates when data-theme="dark" is present */
 [data-theme="dark"] {
-  --bg-body: #111111;
-  --bg-paper: #111111;
-  --bg-surface: #1a1a1a;
-  --accent-primary: #d66c84;
-  --accent-secondary: #d4b059;
-  --accent-nature: #8fbc8f;
-  --accent-glow: rgba(143, 188, 143, 0.15);
-  --overlay-bg: rgba(17, 17, 17, 0.98);
+  /* BACKGROUNDS: The "Gallery" look */
+  --bg-paper: #121212;        /* Deep Charcoal/Black */
+  --bg-surface: #1e1e1e;      /* Lighter Charcoal (Cards) */
+  
+  /* TEXT */
+  --text-main: #f5f5f5;       /* Off-White */
+  --text-muted: rgba(255, 255, 255, 0.6);
+  
+  /* BORDERS */
+  --border: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.2);
+  
+  /* BRANDING SHIFTS (Softer for dark screens) */
+  --category-photos: #4db6ac;                  /* Lighter Teal */
+  --accent-primary: var(--color-heat-400);     /* Dusty Pink instead of Red */
 }
 
-/* === 2. GLOBAL FOUNDATION === */
+/* =========================================
+   3. BASE RESET & PERFORMANCE
+   ========================================= */
 body {
-  font-family: var(--font-sans);
+  /* PERFORMANCE: Remove the complex microscope SVG */
+  background-image: none !important;
+  
+  /* APPLY THEME: Uses the variable defined above */
   background-color: var(--bg-paper);
-  color: var(--text-body);
-  font-size: 17px;
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-
-  /* REMOVED: The radial-gradient dot grid is gone. 
-     Now the <MicroscopeBackground /> will be visible. */
+  color: var(--text-main);
+  
+  /* LAYOUT */
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-sans); /* Default font */
+  
+  /* SMOOTHNESS: Gentle fade when switching themes */
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* KEEPER: This Atmospheric Glow sits at z-index: -1.
-   Your Microscope is z-index: -2. 
-   Result: Particles float subtly *behind* the glow. Perfect depth. */
-body::before {
-  content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
-  background-image: 
-    radial-gradient(circle at 10% 20%, var(--accent-glow) 0%, transparent 50%),
-    radial-gradient(circle at 90% 80%, rgba(117, 30, 41, 0.08) 0%, transparent 50%) !important;
-  pointer-events: none;
-}
-
+/* =========================================
+   4. LAYOUT ARCHITECTURE
+   ========================================= */
 main {
-  max-width: var(--max-width);
+  /* Width Control: Wider for photos, centered */
+  max-width: 1600px;
   margin: 0 auto;
-  padding: 2.5rem 1.5rem 4rem;
+  padding: 1rem 2rem 4rem; /* Top padding clears the fixed header */
   position: relative;
   z-index: 2;
 }
 
-/* === 3. GALLERY GRID (Masonry) === */
+/* MASONRY GRID (For Gallery Pages) */
 .photo-grid {
   column-count: 3;
-  column-gap: 20px;
+  column-gap: 1.5rem;
   width: 100%;
 }
-
-.photo-card {
-  break-inside: avoid;
-  margin-bottom: 20px;
-  position: relative;
-  border-radius: 4px;
-  overflow: hidden;
-  background: var(--bg-surface);
-  border: 1px solid var(--border); 
+.photo-grid > * {
+  /* Prevents cards from splitting across columns */
+  break-inside: avoid; 
+  margin-bottom: 1.5rem;
 }
 
-.photo-card img {
-  width: 100%;
-  height: auto;
-  display: block;
-  transition: opacity 0.3s ease;
-  background: var(--bg-surface);
+/* Responsive Grid */
+@media (max-width: 1024px) { .photo-grid { column-count: 2; } }
+@media (max-width: 600px)  { .photo-grid { column-count: 1; } }
+
+/* =========================================
+   5. UTILITIES & ACCESSIBILITY
+   ========================================= */
+
+/* THE GOLD UTILITY */
+/* Used in Header/Footer to match branding */
+.gold { 
+  color: var(--color-gold-500) !important; 
 }
 
-.photo-card:hover img { opacity: 0.95; }
+/* ACCESSIBILITY: Focus Rings */
+:focus-visible {
+  outline: 2px solid var(--category-photos);
+  outline-offset: 4px;
+}
 
-/* OVERLAY */
-.card-overlay {
+/* ACCESSIBILITY: Skip Link (Hidden until focused) */
+.skip-link {
   position: absolute;
-  bottom: 0; left: 0; width: 100%;
-  padding: 1.5rem 1rem 1rem;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
-  color: white;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-}
-
-.photo-card:hover .card-overlay { opacity: 1; }
-
-.overlay-exif {
+  top: -40px;
+  left: 0;
+  background: var(--bg-surface);
+  color: var(--text-main);
+  padding: 8px 16px;
+  z-index: 1000;
+  transition: top 0.2s;
   font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: rgba(255,255,255,0.9);
-  letter-spacing: 0.05em;
+  font-size: 0.8rem;
+  border: 1px solid var(--border);
 }
-
-/* === 4. RESPONSIVE === */
-@media (max-width: 900px) { .photo-grid { column-count: 2; } }
-@media (max-width: 600px) { .photo-grid { column-count: 1; } }
-
-/* === 5. UTILITIES === */
-::selection {
-  background: rgba(36, 59, 48, 0.15);
-  color: inherit;
-}
+.skip-link:focus { top: 0; }

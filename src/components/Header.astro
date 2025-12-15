@@ -1,45 +1,80 @@
 ---
-// NAVIGATION CONFIG
+/* src/components/Header.astro */
 const BRAND_LINK = "https://heatshockpineapple.com"; 
 const HOME_LINK = "/"; 
 
 const pathname = new URL(Astro.request.url).pathname;
 const currentPath = pathname.slice(1);
+
+/* HELPER: Checks active state for links */
+const isActive = (path: string) => {
+  if (path === HOME_LINK) return currentPath === "";
+  // Removes leading slash for comparison
+  const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+  return currentPath.startsWith(cleanPath);
+};
 ---
 
 <header class="site-header">
   <div class="header-inner">
     
     <a href={BRAND_LINK} class="site-title">
-      <img src="/images/ui/logo.png" alt="Heat Shock Pineapple" class="header-logo" />
+      <img src="/android-chrome-192x192.png" alt="Heat Shock Pineapple" class="header-logo" />
       <span class="brand-text">
         <span class="brand-main">Heat Shock</span><span class="gold"> Pineapple</span>
       </span>
     </a>
 
     <div class="header-controls">
-      <nav id="site-nav" class="site-nav">
-        <a href={HOME_LINK} class={currentPath === "" ? "active" : ""}>Home</a>
-        <a href="/gallery" class={currentPath.startsWith("gallery") ? "active" : ""}>Gallery</a>
-        <a href="/resources" class={currentPath.startsWith("resources") ? "active" : ""}>Resources</a>
+      <nav id="site-nav" class="site-nav" aria-label="Main Navigation">
+        
+        <a href={HOME_LINK} 
+           class={isActive(HOME_LINK) ? "active" : ""}
+           aria-current={isActive(HOME_LINK) ? "page" : undefined}
+        >
+          Home
+        </a>
+
+        <a href="/gallery" 
+           class={isActive("/gallery") ? "active" : ""}
+           aria-current={isActive("/gallery") ? "page" : undefined}
+        >
+          Gallery
+        </a>
+
+        <a href="/resources" 
+           class={isActive("/resources") ? "active" : ""}
+           aria-current={isActive("/resources") ? "page" : undefined}
+        >
+          Resources
+        </a>
 
         <div class="mobile-icons">
-          <button class="icon-btn theme-trigger" aria-label="Toggle Dark Mode" type="button">
-            <span class="theme-text">Theme</span>
-            <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-            <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+          <button class="icon-btn theme-toggle" aria-label="Toggle Dark Mode" type="button">
+            <span class="theme-text">Switch Theme</span>
+            <div class="icon-row">
+              <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+              <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </div>
           </button>
         </div>
       </nav>
 
       <div class="control-separator desktop-only"></div>
 
-      <button class="icon-btn theme-trigger desktop-only" aria-label="Toggle Dark Mode" type="button">
+      <button class="icon-btn theme-toggle desktop-only" aria-label="Toggle Dark Mode" type="button">
         <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
         <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
       </button>
 
-      <button id="menu-toggle" class="menu-toggle" aria-label="Toggle Menu" type="button">
+      <button 
+        id="menu-toggle" 
+        class="menu-toggle" 
+        aria-label="Toggle Menu" 
+        aria-controls="site-nav"
+        aria-expanded="false"
+        type="button"
+      >
         <span class="bar"></span><span class="bar"></span><span class="bar"></span>
       </button>
       
@@ -47,12 +82,13 @@ const currentPath = pathname.slice(1);
   </div>
 </header>
 
-<script type="module">
+<script>
   function setupHeader() {
     let menuToggle = document.getElementById('menu-toggle');
     const nav = document.getElementById('site-nav');
+    const themeToggles = document.querySelectorAll('.theme-toggle');
 
-    // Replace node helper to strip old event listeners
+    // HELPER: Strips old listeners cleanly
     const replaceWithClone = (el) => {
       if (!el?.parentNode) return el;
       const clone = el.cloneNode(true);
@@ -60,29 +96,48 @@ const currentPath = pathname.slice(1);
       return clone;
     };
 
-    // 1. MOBILE MENU LOGIC
     if (menuToggle && nav) {
       const newToggle = replaceWithClone(menuToggle);
       menuToggle = newToggle;
 
+      // Logic to sync Visuals (classes) and Digital State (ARIA)
+      const setMenuState = (isOpen) => {
+        if (isOpen) {
+          menuToggle.classList.add('open');
+          menuToggle.setAttribute('aria-expanded', 'true'); // A11Y
+          nav.classList.add('open');
+          document.body.style.overflow = 'hidden';
+        } else {
+          menuToggle.classList.remove('open');
+          menuToggle.setAttribute('aria-expanded', 'false'); // A11Y
+          nav.classList.remove('open');
+          document.body.style.overflow = '';
+        }
+      };
+
+      // Toggle Button
       menuToggle.addEventListener('click', (e) => {
         e.stopPropagation();
-        menuToggle.classList.toggle('open');
-        nav.classList.toggle('open');
+        const isCurrentlyOpen = nav.classList.contains('open');
+        setMenuState(!isCurrentlyOpen);
       });
 
+      // Link Click (Close)
       nav.querySelectorAll('a').forEach((link) => {
-        link.addEventListener('click', () => {
-          menuToggle.classList.remove('open');
-          nav.classList.remove('open');
-        });
+        link.addEventListener('click', () => setMenuState(false));
+      });
+
+      // Background Click (Close)
+      nav.addEventListener('click', (e) => {
+        if (e.target === nav) setMenuState(false);
       });
     }
 
-    // 2. THEME TOGGLE LOGIC
-    document.querySelectorAll('.theme-trigger').forEach((btn) => {
+    // THEME TOGGLE
+    themeToggles.forEach((btn) => {
       const newBtn = replaceWithClone(btn);
-      newBtn.addEventListener('click', () => {
+      newBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); 
         const element = document.documentElement;
         const current = element.getAttribute("data-theme");
         const next = current === "dark" ? "light" : "dark";
@@ -92,19 +147,22 @@ const currentPath = pathname.slice(1);
     });
   }
 
+  // Run on initial load & View Transitions
   setupHeader();
-  document.addEventListener('astro:page-load', setupHeader);
   document.addEventListener('astro:after-swap', setupHeader);
+  document.addEventListener('astro:page-load', setupHeader);
 </script>
 
 <style>
-  /* === THE GREEN HEADER === */
+  /* === HEADER LAYOUT === */
   .site-header { 
     position: sticky; top: 0; z-index: 1000; padding: 1.2rem 0;
   }
+  
   .site-header::before {
     content: ""; position: absolute; inset: 0; z-index: -1;
-    background: #243b30; 
+    /* TOKEN: Jungle Green Background */
+    background: var(--color-jungle-800); 
     opacity: 0.95;
     backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(255,255,255,0.1);
@@ -116,20 +174,21 @@ const currentPath = pathname.slice(1);
     display: flex; justify-content: space-between; align-items: center; 
   }
   
-  /* BRAND */
+  /* BRANDING */
   .site-title { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; z-index: 1002; }
   
   .brand-text { 
     font-family: var(--font-serif); 
     font-weight: 600; 
     font-size: 1.3rem; 
-    color: #ffffff;
+    /* TOKEN: White Text */
+    color: var(--text-inverse);
     word-spacing: -0.15em;
     letter-spacing: 0.01em; 
   }
   
+  /* PINEAPPLE: Uses .gold global utility */
   .gold { 
-    color: var(--accent-secondary); 
     font-style: normal;
     font-size: 1.02em; 
   }
@@ -145,15 +204,16 @@ const currentPath = pathname.slice(1);
     background: none; border: none; cursor: pointer; padding: 5px; display: flex; align-items: center; transition: color 0.2s;
     color: rgba(255,255,255,0.7);
   }
-  .icon-btn:hover { color: #ffffff; }
+  .icon-btn:hover { color: var(--text-inverse); }
+  .icon-row { display: flex; align-items: center; gap: 10px; }
 
-  /* NAV LINKS */
+  /* NAV LINKS (Desktop) */
   .site-nav { display: flex; gap: 1.5rem; }
   .site-nav a { 
     font-size: 1.05rem; font-weight: 500; text-decoration: none; font-family: var(--font-sans); 
     color: rgba(255,255,255,0.7);
   }
-  .site-nav a:hover, .site-nav a.active { color: #ffffff; }
+  .site-nav a:hover, .site-nav a.active { color: var(--text-inverse); }
   
   /* THEME ICONS */
   .moon-icon { display: none; }
@@ -165,28 +225,31 @@ const currentPath = pathname.slice(1);
   .menu-toggle { display: none; }
   .mobile-icons { display: none; }
 
-  @media (max-width: 768px) {
+  @media (max-width: 900px) { 
     .desktop-only { display: none !important; }
+    
     .menu-toggle { display: flex; flex-direction: column; justify-content: space-between; width: 30px; height: 21px; background: transparent; border: none; cursor: pointer; z-index: 1002; padding: 0; }
-    .bar { width: 100%; height: 3px; background-color: #ffffff; border-radius: 3px; transition: all 0.3s ease; }
+    .bar { width: 100%; height: 3px; background-color: var(--text-inverse); border-radius: 3px; transition: all 0.3s ease; }
     
     .menu-toggle.open .bar:nth-child(1) { transform: translateY(9px) rotate(45deg); }
     .menu-toggle.open .bar:nth-child(2) { opacity: 0; }
     .menu-toggle.open .bar:nth-child(3) { transform: translateY(-9px) rotate(-45deg); }
 
+    /* MOBILE MENU (Transforms .site-nav into overlay) */
     .site-nav { display: none; }
+    
     .site-nav.open {
       display: flex; position: fixed; inset: 0; 
-      background-color: #243b30;
+      /* TOKEN: Green Background */
+      background-color: var(--color-jungle-800);
       flex-direction: column; justify-content: center; align-items: center; gap: 2rem; z-index: 1001;
     }
-    .site-nav.open a { font-size: 1.5rem; font-weight: 600; color: #fff; }
+    .site-nav.open a { font-size: 1.5rem; font-weight: 600; color: var(--text-inverse); }
     
-    /* Adjusted mobile icons for just theme button */
     .mobile-icons { 
       display: flex; gap: 2rem; margin-top: 2rem; padding-top: 2rem; 
       border-top: 1px solid rgba(255,255,255,0.2); 
     }
-    .mobile-icons .icon-btn { flex-direction: column; gap: 8px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: #fff; }
+    .mobile-icons .icon-btn { flex-direction: column; gap: 8px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-inverse); }
   }
 </style>

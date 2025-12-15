@@ -1,17 +1,20 @@
 ---
+/* src/components/PhotoCard.astro */
 interface Props {
   photo: {
     src: string;
+    full: string;
     alt: string;
-    caption?: string;
     exif?: string;
     width: number;
     height: number;
-    full: string;
+    id: string;
   };
 }
 
 const { photo } = Astro.props;
+/* Phase 2: Create the WebP path automatically */
+const webpSrc = photo.src.replace(/\.jpg$/, '.webp');
 ---
 
 <figure class="photo-card">
@@ -19,22 +22,29 @@ const { photo } = Astro.props;
     href={photo.full} 
     data-pswp-width={photo.width}
     data-pswp-height={photo.height}
-    target="_blank"
     class="pswp-link"
+    aria-label={`View full size: ${photo.alt}`}
   >
-    <img 
-      src={photo.src} 
-      alt={photo.alt} 
-      width={photo.width}
-      height={photo.height}
-      loading="lazy"
-      style={`aspect-ratio: ${photo.width} / ${photo.height};`} 
-    />
+    <picture>
+      <source srcset={webpSrc} type="image/webp" />
+      <img 
+        src={photo.src} 
+        alt={photo.alt}
+        width={photo.width}
+        height={photo.height}
+        loading="lazy"
+        decoding="async"
+        /* Aspect ratio prevents layout shift */
+        style={`aspect-ratio: ${photo.width} / ${photo.height};`} 
+      />
+    </picture>
   </a>
   
+  {/* HOVER OVERLAY (Original Style) */}
   <div class="card-overlay">
     {photo.exif && <span class="overlay-exif">{photo.exif}</span>}
     
+    {/* HIDDEN CAPTION (For Lightbox only) */}
     <div class="hidden-caption" style="display: none;">
       {photo.exif && <small style="font-family: var(--font-mono); font-size: 0.8rem; opacity: 0.8;">{photo.exif}</small>}
     </div>
@@ -46,13 +56,14 @@ const { photo } = Astro.props;
     position: relative;
     z-index: 1;
     margin-bottom: 20px;
-    break-inside: avoid;
+    break-inside: avoid; /* Essential for Masonry */
+    
+    /* REMOVED: background and border */
+    /* background: var(--bg-surface); */
+    /* border: 1px solid ... */
+    
     border-radius: 4px;
     overflow: hidden;
-    
-    /* CHANGE: Match your global theme variable */
-    background: var(--bg-surface); 
-    
     display: block; 
   }
 
@@ -60,7 +71,7 @@ const { photo } = Astro.props;
     display: block;
     width: 100%;
     height: 100%;
-    cursor: zoom-in;
+    cursor: zoom-in; 
   }
 
   .photo-card img {
@@ -71,7 +82,7 @@ const { photo } = Astro.props;
   }
 
   .photo-card:hover img {
-    opacity: 0.9;
+    opacity: 0.95;
   }
 
   /* --- OVERLAY STYLES --- */
@@ -80,8 +91,9 @@ const { photo } = Astro.props;
     bottom: 0;
     left: 0;
     right: 0;
-    padding: 15px 10px 10px;
-    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+    padding: 20px 12px 12px;
+    /* Transparent gradient, not opaque */
+    background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
     opacity: 0; 
     transition: opacity 0.3s ease;
     pointer-events: none;
@@ -94,7 +106,7 @@ const { photo } = Astro.props;
   .overlay-exif {
     font-family: var(--font-mono);
     font-size: 0.75rem;
-    color: rgba(255,255,255,0.9);
+    color: rgba(255,255,255,0.95);
     letter-spacing: 0.05em;
   }
 </style>

@@ -3,12 +3,11 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import photosData from "../data/photos.json";
 
-// 1. Get a random "Hero" image from your portfolio
 const allPhotos = photosData.photos || [];
-const randomPhoto = allPhotos[Math.floor(Math.random() * allPhotos.length)];
-
-// Fallback if no photos exist yet
-const heroImage = randomPhoto ? randomPhoto.src : "/images/ui/placeholder.jpg";
+const initialPhoto = allPhotos[Math.floor(Math.random() * allPhotos.length)];
+const fallbackImage = initialPhoto ? initialPhoto.src : "/images/ui/placeholder.jpg";
+const fallbackExif = initialPhoto?.exif || "Unknown Camera";
+const fallbackAlt = initialPhoto?.alt || "Featured photography shot";
 ---
 
 <BaseLayout title="Home" description="The photography portfolio of J. R. Hernandez.">
@@ -16,23 +15,36 @@ const heroImage = randomPhoto ? randomPhoto.src : "/images/ui/placeholder.jpg";
   <section class="hero-section">
     
     <div class="hero-content">
-      <h1 class="hero-title">Heat Shock Photography</h1>
-      <p class="hero-text">
-        Pictures from a life spent between cities. 
-      </p>
+      
+      <div class="text-group">
+        <h1 class="hero-title">
+          <span class="text-main">Heat Shock</span> 
+          <span class="text-gold">Photography</span>
+        </h1>
+        <p class="hero-text">
+          Pictures from a life spent between cities. 
+        </p>
+      </div>
       
       <div class="cta-wrapper">
         <a href="/gallery" class="btn-primary">View the Gallery</a>
         <a href="/resources" class="btn-text">View Resources &rarr;</a>
       </div>
+
     </div>
 
     <div class="hero-visual">
       <div class="polaroid-stack">
-        <img src={heroImage} alt="Featured Shot" class="hero-img" />
+        <img 
+          id="random-hero-img"
+          src={fallbackImage} 
+          alt={fallbackAlt}
+          class="hero-img" 
+          loading="eager"
+        />
         <div class="meta-tag">
-            <span>FEATURED SHOT</span>
-            <span class="mono">{randomPhoto?.exif || "Unknown Camera"}</span>
+            <span class="meta-label">FEATURED SHOT</span>
+            <span id="random-hero-exif" class="mono">{fallbackExif}</span>
         </div>
       </div>
     </div>
@@ -41,110 +53,253 @@ const heroImage = randomPhoto ? randomPhoto.src : "/images/ui/placeholder.jpg";
 
 </BaseLayout>
 
+<script define:vars={{ allPhotos }}>
+  function randomizeHero() {
+    if (!allPhotos || allPhotos.length === 0) return;
+    const img = document.getElementById('random-hero-img');
+    const meta = document.getElementById('random-hero-exif');
+    if (img && meta) {
+      const random = allPhotos[Math.floor(Math.random() * allPhotos.length)];
+      img.src = random.src;
+      img.alt = random.alt || "Featured photography shot";
+      meta.textContent = random.exif || "Unknown Camera";
+    }
+  }
+  randomizeHero();
+  document.addEventListener('astro:after-swap', randomizeHero);
+</script>
+
 <style>
+  /* === MOBILE LAYOUT (Default) === */
   .hero-section {
-    min-height: 70vh;
-    display: grid;
-    grid-template-columns: 1fr;
+    min-height: 85svh;
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 3rem;
-    padding: 2rem 0;
+    /* Clean spacing */
+    padding: 1rem 1.5rem 3rem 1.5rem;
+    gap: 2rem;
   }
 
+  /* MAGIC TRICK for Mobile Reordering:
+     display: contents makes the .hero-content div "disappear" from the layout,
+     so its children (.text-group and .cta-wrapper) become direct siblings 
+     of .hero-visual. This lets us shuffle them with 'order'.
+  */
+  .hero-content {
+    display: contents;
+  }
+
+  /* 1. TITLE & SUBTITLE */
+  .text-group {
+    order: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.75rem;
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+
+  /* 2. PHOTO */
+  .hero-visual {
+    order: 2;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+    margin-bottom: 1rem; /* Breathing room before buttons */
+  }
+
+  /* 3. BUTTONS */
+  .cta-wrapper {
+    order: 3;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+    align-items: center;
+  }
+
+  /* === DESKTOP LAYOUT (900px+) === */
   @media (min-width: 900px) {
     .hero-section {
-      grid-template-columns: 1.2fr 1fr; /* Text wider than image */
-      gap: 5rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr; /* Equal width split */
+      gap: 4rem;
+      padding: 4rem 5vw;
+      align-items: center;
+    }
+
+    /* Restore the Wrapper container */
+    .hero-content {
+      display: flex; /* Turn the container back on */
+      flex-direction: column;
+      align-items: flex-start;
+      text-align: left;
+      order: unset; /* Reset order */
+    }
+    
+    .text-group { 
+      order: unset; 
+      align-items: flex-start; 
+      text-align: left;
+      gap: 1rem; 
+    }
+
+    .cta-wrapper {
+      order: unset;
+      flex-direction: row;
+      width: auto;
+      margin-top: 2rem; 
+    }
+
+    .hero-visual {
+      order: unset;
+      margin-bottom: 0;
     }
   }
 
+  /* === TYPOGRAPHY === */
   .hero-title {
     font-family: var(--font-serif);
-    font-size: clamp(3rem, 8vw, 5rem);
-    line-height: 1.1;
-    margin-bottom: 1.5rem;
-    color: var(--text-main);
+    font-size: clamp(3rem, 7vw, 5.5rem);
+    line-height: 1.05;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .text-main { color: var(--text-main); }
+  
+  .text-gold {
+    color: var(--brand-secondary);
+    filter: brightness(0.9); 
+    font-weight: 700;
   }
 
   .hero-text {
-    font-size: 1.1rem;
+    font-family: var(--font-sans);
+    font-size: 1.25rem;
     color: var(--text-muted);
-    max-width: 38ch;
-    margin-bottom: 2.5rem;
-    line-height: 1.6;
+    line-height: 1.5;
+    margin: 0;
+    font-weight: 400;
   }
 
-  .cta-wrapper {
-    display: flex;
-    gap: 1.5rem;
-    align-items: center;
-  }
-
+  /* === BUTTONS === */
   .btn-primary {
     background-color: var(--text-main);
     color: var(--bg-paper);
-    padding: 12px 28px;
+    padding: 16px 36px;
     border-radius: 50px;
     text-decoration: none;
-    font-size: 0.9rem;
-    letter-spacing: 0.05em;
+    font-family: var(--font-sans);
+    font-size: 1rem;
     font-weight: 500;
+    width: 100%;
+    text-align: center;
     transition: transform 0.2s ease, opacity 0.2s ease;
+    box-shadow: 0 4px 15px rgba(0,0,0, 0.1);
   }
+  @media (min-width: 900px) { .btn-primary { width: auto; } }
 
   .btn-primary:hover {
     transform: translateY(-2px);
-    opacity: 0.9;
+    opacity: 0.85;
   }
 
   .btn-text {
     color: var(--text-main);
     text-decoration: none;
-    font-size: 0.9rem;
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    font-weight: 500;
     border-bottom: 1px solid transparent;
     transition: border-color 0.2s ease;
   }
   
-  .btn-text:hover { border-bottom-color: var(--text-main); }
+  .btn-text:hover { 
+    border-bottom-color: var(--brand-secondary);
+    color: var(--brand-secondary);
+  }
 
-  /* VISUAL SIDE */
-  .hero-visual {
+  /* === VISUALS === */
+  .polaroid-stack {
     position: relative;
-    display: flex;
-    justify-content: center;
+    width: 100%;
+    max-width: 600px;
   }
 
   .hero-img {
     width: 100%;
-    max-height: 600px;
+    height: auto;
+    aspect-ratio: 4/5;
     object-fit: cover;
     border-radius: var(--radius);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.12);
-    transform: rotate(2deg); /* Artistic tilt */
-    transition: transform 0.5s ease;
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15);
+    transform: rotate(2deg);
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    will-change: transform;
+    backface-visibility: hidden;
   }
 
-  .hero-visual:hover .hero-img {
-    transform: rotate(0deg) scale(1.02);
-  }
+  .hero-visual:hover .hero-img { transform: rotate(0deg) scale(1.02); }
 
+  /* === META TAG (Fixed for Night Mode) === */
   .meta-tag {
     position: absolute;
-    bottom: -20px;
-    right: -20px;
-    background: var(--bg-paper);
-    padding: 10px 20px;
+    bottom: 25px;
+    right: -15px;
+    
+    /* FIX: Use surface color so it turns dark in night mode */
+    background: var(--bg-surface); 
     border: 1px solid var(--border);
-    font-size: 0.7rem;
-    letter-spacing: 0.1em;
+    
+    padding: 10px 20px;
     display: flex;
     flex-direction: column;
     gap: 4px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+    border-radius: 2px;
+    z-index: 2;
+    transform: rotate(-1.5deg);
+  }
+
+  .meta-label {
+    font-family: var(--font-sans);
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    color: var(--brand-secondary);
+    text-transform: uppercase;
   }
 
   .mono {
     font-family: var(--font-mono);
-    color: var(--text-muted);
+    font-size: 0.85rem;
+    /* FIX: This now contrasts correctly against --bg-surface in both modes */
+    color: var(--text-main); 
+  }
+
+  @media (max-width: 900px) {
+    /* 1. Allow the sticker to stay tilted on mobile too */
+    .meta-tag { 
+      right: -5px; /* Slight hang-off look */
+      bottom: 0; 
+      transform: rotate(-1.5deg); /* Matches the "messy" vibe */
+    }
+    
+    /* 2. Ensure photo stays tilted (Default behavior, but good to be explicit) */
+    .hero-visual { 
+      margin-top: 0; 
+    }
+    
+    .hero-img {
+      /* Optional: You can slightly reduce the tilt on mobile if 2deg feels too aggressive */
+      transform: rotate(2deg); 
+    }
   }
 </style>

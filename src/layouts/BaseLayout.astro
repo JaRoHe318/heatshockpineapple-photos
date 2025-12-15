@@ -1,11 +1,12 @@
 ---
+
 import { ClientRouter } from 'astro:transitions'; 
 import "../styles/global.css";
 import 'photoswipe/style.css';
 
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
-import MicroscopeBackground from "../components/MicroscopeBackground.astro";
+
 
 interface Props {
   title: string;
@@ -57,7 +58,8 @@ const socialImageURL = new URL(image, Astro.site).href;
     </script>
   </head>
   <body>
-    <MicroscopeBackground />
+    <a href="#main-gallery" class="skip-link">Skip to content</a>
+
 
     <Header />
       
@@ -78,15 +80,22 @@ const socialImageURL = new URL(image, Astro.site).href;
           gallery: '#main-gallery', 
           children: 'a.pswp-link',
           pswpModule: PhotoSwipe,
-          // We keep opacity high so the theme color is rich/visible
+          
+          /* 1. OPACITY SETTINGS */
+          /* We set this to 1.0 (or nearly 1) so the colors defined in CSS are solid */
           bgOpacity: 0.95, 
           showHideOpacity: true,
+          
+          /* 2. BEHAVIOR */
           wheelToZoom: true,
+          preload: [1, 3],
+
           paddingFn: (viewportSize) => {
             return { top: 0, bottom: 0, left: 0, right: 0 }
           }
         });
 
+        /* 3. CAPTION LOGIC (The Scraper) */
         lightbox.on('uiRegister', function() {
           lightbox.pswp.ui.registerElement({
             name: 'custom-caption',
@@ -126,38 +135,38 @@ const socialImageURL = new URL(image, Astro.site).href;
 <style>
   .global-wrapper {
     width: 100%;
-    max-width: 1400px; 
+    /* We keep the width/centering logic here */
+    max-width: 1600px; 
     margin: 0 auto;
-    padding: 0 24px;
-    min-height: 80vh; 
+    
     position: relative;
     z-index: 2; 
   }
 
-  @media (min-width: 768px) { 
-    .global-wrapper { 
-      padding: 0 40px; 
-    } 
-  }
+  /* @media (min-width: 768px) { .global-wrapper { padding: 0 40px; } } */
 
-  /* --- THEME-AWARE LIGHTBOX BACKGROUND --- */
-  /* This forces the lightbox to match your Day (Cream) or Night (Dark) theme */
+  /* ================================================== */
+  /* PRO STANDARD LIGHTBOX (ALWAYS DARK)              */
+  /* ================================================== */
+  
   :global(.pswp__bg) {
-    background: var(--bg-body) !important;
-    transition: background-color 0.3s ease; /* Smooth transition if user toggles theme while open */
+    /* Deep Charcoal - Best for color perception & contrast */
+    background-color: #0e0e0e !important; 
+    opacity: 0.98 !important; /* Almost opaque to block out the UI */
+    transition: opacity 0.3s ease;
   }
 
-  /* --- LIGHTBOX CAPTION STYLES --- */
+  /* ================================================== */
+  /* CAPTION STYLES                                   */
+  /* ================================================== */
   :global(.pswp__custom-caption) {
     position: absolute;
-    bottom: 0; 
-    left: 0;
-    width: 100%;
-    /* Dark gradient ensures white text is readable even on Cream background */
+    bottom: 0; left: 0; width: 100%;
+    /* Subtle gradient to make white text readable on any photo */
     background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
     padding: 4rem 1.5rem 2rem 1.5rem;
     text-align: center;
-    color: rgba(255, 255, 255, 0.9);
+    color: rgba(255, 255, 255, 0.95); /* Bright white text */
     pointer-events: none;
     z-index: 2000;
   }
@@ -165,9 +174,9 @@ const socialImageURL = new URL(image, Astro.site).href;
   :global(.pswp__custom-caption small) {
     font-family: var(--font-mono);
     font-size: 0.9rem;
-    color: rgba(255, 255, 255, 0.85);
+    color: rgba(255, 255, 255, 0.85); /* Slightly muted EXIF data */
     display: block;
     letter-spacing: 0.05em;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.9);
   }
 </style>
