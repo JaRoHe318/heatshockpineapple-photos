@@ -1,0 +1,9 @@
+# public/robots.txt
+
+# Allow all robots to crawl the entire site
+User-agent: *
+Allow: /
+
+# Direct search engines to the location of your sitemap
+# The sitemap integration automatically creates sitemap-index.xml
+Sitemap: https://photos.heatshockpineapple.com/sitemap-index.xml
