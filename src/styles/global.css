@@ -105,7 +105,7 @@ main {
 @media (max-width: 600px) {
     .photo-grid {
         /* This is the key override for the "3-at-a-time" stream on phones */
-        column-count: 3 !important;
+        column-count: 2 !important;
         
         /* Reduce the gap aggressively so three columns fit */
         column-gap: 0.25rem !important;
