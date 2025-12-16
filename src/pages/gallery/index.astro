@@ -71,7 +71,11 @@ const randomStream = allPhotos
     </button>
   </div>
 
-  <section class="photo-grid" id="stream-grid">
+  <section 
+    class="photo-grid" 
+    id="stream-grid"
+    data-all-photos={JSON.stringify(allPhotos)} 
+  >
     {randomStream.map((photo) => (
       <PhotoCard photo={photo} />
     ))}
@@ -82,33 +86,80 @@ const randomStream = allPhotos
 </BaseLayout>
 
 <script>
-  /* --- SHUFFLE LOGIC --- */
+  import PhotoCard from "../../components/PhotoCard.astro"; // Note: You can't import components in client scripts easily like this.
+  // Instead, we will generate the HTML string manually since it's simple.
+
   document.addEventListener('astro:page-load', () => {
     const btn = document.getElementById('shuffle-btn');
     const grid = document.getElementById('stream-grid');
 
     if (btn && grid) {
+      // 1. Read the full list of photos from the data attribute
+      const allPhotos = JSON.parse(grid.dataset.allPhotos || '[]');
+
       btn.addEventListener('click', () => {
-        // Visual Feedback (Spin the icon?)
+        // Visual Feedback
         const originalText = btn.innerHTML;
         btn.innerHTML = "↻"; 
         btn.style.opacity = "0.7";
         btn.style.pointerEvents = "none";
+        
+        // fade out grid
+        grid.style.opacity = "0.5";
+        grid.style.transition = "opacity 0.2s";
 
-        const photos = Array.from(grid.children);
+        setTimeout(() => {
+          // 2. Pick 15 NEW random photos from the full list
+          const newBatch = allPhotos
+            .sort(() => 0.5 - Math.random())
+            .slice(0, 15);
 
-        // Fisher-Yates Shuffle
-        for (let i = photos.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [photos[i], photos[j]] = [photos[j], photos[i]];
-        }
+          // 3. Rebuild the HTML (Clean version - CSS handles the styling now!)
+          grid.innerHTML = newBatch.map(photo => {
+            const webpSrc = photo.src.replace(/\.jpg$/, '.webp');
+            
+            return `
+            <figure class="photo-card">
+              <a 
+                href="${photo.full}" 
+                data-pswp-width="${photo.width}" 
+                data-pswp-height="${photo.height}" 
+                class="pswp-link" 
+                aria-label="View full size: ${photo.alt || ''}"
+                target="_blank"
+              >
+                <picture>
+                  <source srcset="${webpSrc}" type="image/webp" />
+                  <img 
+                    src="${photo.src}" 
+                    alt="${photo.alt || ''}" 
+                    width="${photo.width}"
+                    height="${photo.height}"
+                    loading="lazy" 
+                    decoding="async"
+                  />
+                </picture>
+              </a>
+              
+              <div class="card-overlay">
+                ${photo.exif ? `<span class="overlay-exif">${photo.exif}</span>` : ''}
+                <div class="hidden-caption" style="display: none;">
+                  ${photo.exif ? `<small style="font-family: var(--font-mono); font-size: 0.8rem; opacity: 0.8;">${photo.exif}</small>` : ''}
+                </div>
+              </div>
+            </figure>
+            `;
+          }).join('');
 
-        photos.forEach(photo => grid.appendChild(photo));
-
-        setTimeout(() => { 
+          // Reset UI
+          grid.style.opacity = "1";
           btn.innerHTML = originalText; 
           btn.style.opacity = "1";
           btn.style.pointerEvents = "auto";
+          
+          // Re-initialize PhotoSwipe if you are using it
+          // (If PhotoSwipe is initialized globally on .photo-grid, it might need a re-scan. 
+          //  Usually, if it delegates events, you are fine. If not, you might need to dispatch an event here.)
         }, 300);
       });
     }
