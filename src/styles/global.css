@@ -108,7 +108,7 @@ main {
         column-count: 3 !important;
         
         /* Reduce the gap aggressively so three columns fit */
-        column-gap: 0.5rem !important; 
+        column-gap: 0.25rem !important;
     }
 }
 
