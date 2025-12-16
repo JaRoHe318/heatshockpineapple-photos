@@ -5,7 +5,7 @@ import photosData from "../data/photos.json";
 
 const allPhotos = photosData.photos || [];
 const initialPhoto = allPhotos[Math.floor(Math.random() * allPhotos.length)];
-const fallbackImage = initialPhoto ? initialPhoto.src : "/images/ui/placeholder.jpg";
+const fallbackImage = initialPhoto ? initialPhoto.full : "/images/ui/placeholder.jpg";
 const fallbackExif = initialPhoto?.exif || "Unknown Camera";
 const fallbackAlt = initialPhoto?.alt || "Featured photography shot";
 ---
@@ -60,7 +60,7 @@ const fallbackAlt = initialPhoto?.alt || "Featured photography shot";
     const meta = document.getElementById('random-hero-exif');
     if (img && meta) {
       const random = allPhotos[Math.floor(Math.random() * allPhotos.length)];
-      img.src = random.src;
+      img.src = random.full;
       img.alt = random.alt || "Featured photography shot";
       meta.textContent = random.exif || "Unknown Camera";
     }
