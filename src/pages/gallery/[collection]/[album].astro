@@ -1,4 +1,5 @@
 ---
+/* src/pages/gallery/[collection]/[album].astro */
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import PhotoCard from "../../../components/PhotoCard.astro";
 import photosData from "../../../data/photos.json";
@@ -6,7 +7,6 @@ import photosData from "../../../data/photos.json";
 export async function getStaticPaths() {
   const allPhotos = photosData.photos || [];
   const albumPhotos = allPhotos.filter(p => p.album !== null);
-  
   const paths = [];
   const seen = new Set();
   
@@ -22,46 +22,124 @@ export async function getStaticPaths() {
       });
     }
   });
-  
   return paths;
 }
 
 const { collection, album } = Astro.params;
 const { photos } = Astro.props;
 
-const displayTitle = album.charAt(0).toUpperCase() + album.slice(1);
-const parentTitle = collection.charAt(0).toUpperCase() + collection.slice(1);
+// --- CONFIG: Name Mapping ---
+const collectionNames = {
+  street: "Street",
+  travel: "Transit",
+  portrait: "Portraits",
+  uncategorized: "Archive"
+};
 
-// 1. FIX: Grab the first photo to use as the Social Preview
-// We use the thumbnail (.src) or the full (.full) depending on what you prefer.
-// Usually, for OG tags, the thumbnail (800px) is actually perfect size.
+const parentTitle = collectionNames[collection] || collection.charAt(0).toUpperCase() + collection.slice(1);
+const displayTitle = album.charAt(0).toUpperCase() + album.slice(1);
 const coverImage = photos.length > 0 ? photos[0].src : undefined;
 ---
 
-<BaseLayout 
-  title={`${displayTitle} - ${parentTitle}`} 
-  image={coverImage}
->
+<BaseLayout title={`${displayTitle} - ${parentTitle}`} image={coverImage}>
   
   <header class="collection-header">
     <div class="header-content">
       <a href={`/gallery/${collection}`} class="back-link">← {parentTitle}</a>
       <h1 class="collection-title">{displayTitle}</h1>
+      <div class="line-break"></div>
       <p class="collection-count">{photos.length} Frames</p>
     </div>
   </header>
 
-  <section class="photo-grid">
+  <section class="photo-grid sharp-grid">
     {photos.map((photo) => (
-      <PhotoCard photo={photo} />
+      <div class="masonry-item">
+        <PhotoCard photo={photo} />
+      </div>
     ))}
   </section>
+  
+  <div class="spacer"></div>
 
 </BaseLayout>
 
 <style>
-  .collection-header { margin: 0 0 3rem 0; border-bottom: 1px solid var(--border); padding-bottom: 2rem; }
-  .back-link { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); text-decoration: none; }
-  .collection-title { font-family: var(--font-serif); font-size: 3rem; margin: 0.5rem 0; color: var(--text-main); text-transform: capitalize; }
-  .collection-count { font-family: var(--font-mono); color: var(--text-muted); }
+  /* --- HEADER --- */
+  .collection-header {
+    margin: 3rem 0 4rem 0;
+    display: flex;
+    justify-content: center;
+  }
+
+  .header-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.5rem;
+  }
+
+  .back-link {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .back-link:hover { color: var(--brand-secondary); }
+  
+  .collection-title {
+    font-family: var(--font-serif);
+    font-size: clamp(3rem, 5vw, 4rem);
+    margin: 0;
+    line-height: 1;
+    color: var(--text-main);
+    text-transform: capitalize;
+  }
+
+  .line-break {
+    width: 40px;
+    height: 2px;
+    background: var(--brand-secondary);
+    margin: 0.5rem 0;
+    opacity: 0.6;
+  }
+
+  .collection-count {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  /* --- MASONRY GRID --- */
+  .photo-grid {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2vw;
+    column-count: 3;
+    column-gap: 4px; /* Tight 4px gap */
+  }
+
+  .masonry-item {
+    break-inside: avoid;
+    margin-bottom: 4px;
+  }
+
+  @media (max-width: 600px) {
+    .photo-grid { column-count: 2; }
+  }
+
+  .spacer { height: 6rem; }
+</style>
+
+<style is:global>
+  .sharp-grid .photo-card, 
+  .sharp-grid .photo-card img { border-radius: 0 !important; }
+  .sharp-grid .photo-card { margin: 0 !important; width: 100%; display: block; }
+  .photo-grid img { image-rendering: -webkit-optimize-contrast; }
 </style>

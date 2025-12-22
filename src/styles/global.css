@@ -1,76 +1,77 @@
 /* =========================================
    1. DESIGN TOKENS (The DNA)
    ========================================= */
-/* Import the core variables (Colors, Fonts, Spacing) */
+/* Import the Design System (which loads tokens + theme-base) */
 @import "@heatshockpineapple/design-tokens/src/index.css";
 
 /* =========================================
    2. THEME LOGIC (The "Brain")
    ========================================= */
 
-/* --- LIGHT MODE (Default) --- */
+/* --- DARK MODE (Default for this site) --- */
 :root {
-  /* BACKGROUNDS: The "Archival" look */
-  --bg-paper: #fdfbf7;        /* Warm Cream (Page Background) */
-  --bg-surface: #ffffff;      /* Pure White (Cards/Panels) */
+  /* BACKGROUNDS: Force the Dark Tokens from the Repo */
+  --bg-paper: var(--color-paper-dark);
+  --bg-surface: var(--color-surface-dark);
   
-  /* TEXT: High contrast but not harsh */
-  --text-main: #2c2c2c;       /* Soft Charcoal */
-  --text-inverse: #ffffff;    /* Text on dark buttons/headers */
-  --text-muted: rgba(0, 0, 0, 0.6);
+  /* TEXT */
+  --text-main: #ffffff;                    /* Always White in Dark Mode */
+  --text-inverse: #ffffff;                 /* Headers/Footers stay White */
+  --text-muted: rgba(255, 255, 255, 0.7);
   
   /* BORDERS */
-  --border: rgba(0, 0, 0, 0.1);
-  --border-strong: rgba(0, 0, 0, 0.2);
-
+  --border: var(--border-dim-dark);
+  --border-strong: rgba(255, 255, 255, 0.3);
+  
   /* BRANDING & ACCENTS */
-  --category-photos: #2a9d8f;                  /* Teal */
-  --category-journal: var(--color-heat-900);   /* Heat Red */
-  --accent-primary: var(--color-heat-900);
-  --accent-highlight: var(--brand-secondary);  /* Gold */
+  --category-photos: #4db6ac;                 
+  --category-journal: var(--color-heat-400);  /* Dusty Pink */
+  --accent-primary: var(--color-heat-400);
+  
+  /* KODAK GOLD ACCENT */
+  --accent-highlight: var(--color-gold-500); 
+  --brand-secondary: var(--color-gold-500);
   
   /* UI MAPPINGS */
   --focus-ring: var(--category-photos);
-  --radius: 8px; /* Standard border radius */
+  --radius: 8px;
 }
 
-/* --- DARK MODE (The Override) --- */
-/* This automatically activates when data-theme="dark" is present */
-[data-theme="dark"] {
-  /* BACKGROUNDS: The "Gallery" look */
-  --bg-paper: #121212;        /* Deep Charcoal/Black */
-  --bg-surface: #1e1e1e;      /* Lighter Charcoal (Cards) */
+/* --- LIGHT MODE (The Override) --- */
+[data-theme="light"] {
+  /* BACKGROUNDS: Swap to Warm/Light Tokens */
+  --bg-paper: var(--color-paper-warm);
+  --bg-surface: #ffffff;                      
   
   /* TEXT */
-  --text-main: #f5f5f5;       /* Off-White */
-  --text-muted: rgba(255, 255, 255, 0.6);
+  --text-main: var(--color-jungle-800);    /* Brand Green for text */
+  --text-inverse: #ffffff;                 /* Inverse stays White */
+  --text-muted: rgba(0, 0, 0, 0.6);
   
   /* BORDERS */
-  --border: rgba(255, 255, 255, 0.1);
-  --border-strong: rgba(255, 255, 255, 0.2);
-  
-  /* BRANDING SHIFTS (Softer for dark screens) */
-  --category-photos: #4db6ac;                  /* Lighter Teal */
-  --accent-primary: var(--color-heat-400);     /* Dusty Pink instead of Red */
+  --border: var(--border-dim);
+  --border-strong: rgba(0, 0, 0, 0.2);
+
+  /* BRANDING SHIFTS */
+  --category-photos: #2a9d8f;                  
+  --category-journal: var(--color-heat-900);   /* Heat Red */
+  --accent-primary: var(--color-heat-900);
 }
 
 /* =========================================
    3. BASE RESET & PERFORMANCE
    ========================================= */
 body {
-  /* PERFORMANCE: Remove the complex microscope SVG */
+  /* Override any defaults from theme-base.css to ensure correct mapping */
   background-image: none !important;
-  
-  /* APPLY THEME: Uses the variable defined above */
   background-color: var(--bg-paper);
   color: var(--text-main);
   
-  /* LAYOUT */
   margin: 0;
   min-height: 100vh;
-  font-family: var(--font-sans); /* Default font */
+  /* Use the font stack from the design repo */
+  font-family: var(--font-sans);
   
-  /* SMOOTHNESS: Gentle fade when switching themes */
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
@@ -78,44 +79,35 @@ body {
    4. LAYOUT ARCHITECTURE
    ========================================= */
 main {
-  /* Width Control: Wider for photos, centered */
   max-width: 1600px;
   margin: 0 auto;
-  padding: 1rem 2rem 4rem; /* Top padding clears the fixed header */
+  padding: 1rem 2rem 4rem;
   position: relative;
   z-index: 2;
 }
 
-/* MASONRY GRID (For Gallery Pages) */
+/* MASONRY GRID */
 .photo-grid {
   column-count: 3;
   column-gap: 1.5rem;
   width: 100%;
 }
 .photo-grid > * {
-  /* Prevents cards from splitting across columns */
   break-inside: avoid; 
   margin-bottom: 1.5rem;
 }
 
-/* Responsive Grid */
 @media (max-width: 1024px) { .photo-grid { column-count: 2; } }
 
-/* Targets the standard mobile phone breakpoint */
 @media (max-width: 600px) {
     .photo-grid {
-        /* This is the key override for the "3-at-a-time" stream on phones */
         column-count: 2 !important;
-        
-        /* Reduce the gap aggressively so three columns fit */
         column-gap: 0.25rem !important;
     }
 }
 
-/* Optional: Targets the tablet/mid-size view */
 @media (min-width: 601px) and (max-width: 900px) {
     .photo-grid {
-        /* Keep it at 2 columns for a slightly better tablet experience */
         column-count: 2 !important;
         column-gap: 1rem !important;
     }
@@ -126,7 +118,6 @@ main {
    ========================================= */
 
 /* THE GOLD UTILITY */
-/* Used in Header/Footer to match branding */
 .gold { 
   color: var(--color-gold-500) !important; 
 }
@@ -137,7 +128,7 @@ main {
   outline-offset: 4px;
 }
 
-/* ACCESSIBILITY: Skip Link (Hidden until focused) */
+/* ACCESSIBILITY: Skip Link */
 .skip-link {
   position: absolute;
   top: -40px;

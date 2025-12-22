@@ -58,11 +58,9 @@ const webpSrc = photo.src.replace(/\.jpg$/, '.webp');
     margin-bottom: 20px;
     break-inside: avoid; /* Essential for Masonry */
     
-    /* REMOVED: background and border */
-    /* background: var(--bg-surface); */
-    /* border: 1px solid ... */
+    /* CHANGE: Use global variable for consistency */
+    border-radius: var(--radius);
     
-    border-radius: 4px;
     overflow: hidden;
     display: block; 
   }
@@ -92,7 +90,7 @@ const webpSrc = photo.src.replace(/\.jpg$/, '.webp');
     left: 0;
     right: 0;
     padding: 20px 12px 12px;
-    /* Transparent gradient, not opaque */
+    /* Transparent gradient works for both Light/Dark modes because text is always white */
     background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
     opacity: 0; 
     transition: opacity 0.3s ease;

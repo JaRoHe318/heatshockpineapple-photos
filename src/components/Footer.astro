@@ -25,8 +25,8 @@ const currentYear = new Date().getFullYear();
     width: 100%;
     /* TOKEN: Matches Header Background */
     background: var(--color-jungle-800);
-    /* TOKEN: Matches Header Text */
-    color: var(--text-inverse);
+    /* CHANGE: Hardcoded to white so it never flips to black, even if theme vars change */
+    color: #ffffff;
     margin-top: 6rem;
     padding: 3rem 0;
   }
@@ -60,7 +60,8 @@ const currentYear = new Date().getFullYear();
     font-family: var(--font-serif);
     font-size: 1.25rem;
     font-weight: 600;
-    color: var(--text-inverse);
+    /* CHANGE: Inherit ensures it stays white like the parent container */
+    color: inherit;
     word-spacing: -0.15em; 
   }
 
@@ -93,6 +94,6 @@ const currentYear = new Date().getFullYear();
   }
 
   .footer-links a:hover {
-    color: var(--text-inverse);
+    color: #ffffff;
   }
 </style>

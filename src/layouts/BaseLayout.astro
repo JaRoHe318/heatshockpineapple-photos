@@ -1,5 +1,5 @@
 ---
-
+/* src/layouts/BaseLayout.astro */
 import { ClientRouter } from 'astro:transitions'; 
 import "../styles/global.css";
 import 'photoswipe/style.css';
@@ -46,11 +46,13 @@ const socialImageURL = new URL(image, Astro.site).href;
     <meta property="og:type" content={type} />
     <meta property="og:image" content={socialImageURL} />
 
+    <meta name="theme-color" content="#121212" />
+
     <script is:inline>
         const setTheme = () => {
           const stored = localStorage.getItem("theme");
-          const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-          const theme = stored || (prefersDark ? "dark" : "light");
+          // CHANGE: Default to "dark" if nothing is stored
+          const theme = stored || "dark"; 
           document.documentElement.setAttribute("data-theme", theme);
         };
         setTheme();

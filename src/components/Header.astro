@@ -42,11 +42,11 @@ const isActive = (path: string) => {
           Gallery
         </a>
 
-        <a href="/resources" 
-           class={isActive("/resources") ? "active" : ""}
-           aria-current={isActive("/resources") ? "page" : undefined}
+        <a href="/info" 
+           class={isActive("/info") ? "active" : ""}
+           aria-current={isActive("/info") ? "page" : undefined}
         >
-          Resources
+          Info
         </a>
 
         <div class="mobile-icons">
@@ -216,10 +216,13 @@ const isActive = (path: string) => {
   .site-nav a:hover, .site-nav a.active { color: var(--text-inverse); }
   
   /* THEME ICONS */
-  .moon-icon { display: none; }
-  .sun-icon { display: block; }
-  :global([data-theme="dark"]) .sun-icon { display: none; }
-  :global([data-theme="dark"]) .moon-icon { display: block; }
+  /* Default (Dark Mode) -> Show Moon */
+  .sun-icon { display: none; }
+  .moon-icon { display: block; }
+
+  /* Light Mode Override -> Show Sun */
+  :global([data-theme="light"]) .sun-icon { display: block; }
+  :global([data-theme="light"]) .moon-icon { display: none; }
 
   /* RESPONSIVE */
   .menu-toggle { display: none; }

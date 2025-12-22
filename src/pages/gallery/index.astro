@@ -7,7 +7,8 @@ import photosData from "../../data/photos.json";
 const allPhotos = photosData.photos || [];
 
 // --- 1. PREPARE COLLECTIONS ---
-const customOrder = ['Portrait', 'Street', 'Travel']; 
+// Custom order for your pillars
+const customOrder = ['Portrait', 'Street', 'Transit'];
 
 const uniqueCollections = [...new Set(allPhotos.map(p => p.collection))]
   .filter(c => c !== 'uncategorized')
@@ -25,7 +26,7 @@ const collections = uniqueCollections.map(name => {
   return {
     name: name,
     count: photosInCol.length,
-    cover: photosInCol[0]?.src
+    cover: photosInCol[0]?.src 
   };
 });
 
@@ -38,23 +39,26 @@ const randomStream = allPhotos
 <BaseLayout title="Gallery" description="Browse gallery and featured shots.">
   
   <header class="gallery-header">
-    <h1 class="page-title">Gallery</h1>
-    <p class="page-desc">Explore by series or wander through the stream.</p>
+    <div class="header-content">
+      <h1 class="page-title">Gallery</h1>
+      <div class="line-break"></div>
+      <p class="page-desc">Explore by series or wander the stream.</p>
+    </div>
   </header>
 
   <section class="collections-nav">
     <div class="nav-grid">
       {collections.map((col) => (
-        <a href={`/gallery/${col.name}`} class="nav-card">
+        <a href={`/gallery/${col.name}`} class="nav-card group">
           <div class="nav-img-box">
             <img src={col.cover} alt={col.name} loading="lazy" />
             <div class="nav-overlay">
-              <span class="arrow">→</span>
+              <span class="arrow">View Series &rarr;</span>
             </div>
           </div>
           <div class="nav-meta">
-            <span class="nav-title">{col.name}</span>
-            <span class="nav-count">{col.count}</span>
+            <h2 class="nav-title">{col.name}</h2>
+            <span class="nav-count mono">{col.count} Frames</span>
           </div>
         </a>
       ))}
@@ -63,21 +67,21 @@ const randomStream = allPhotos
 
   <div class="stream-toolbar">
     <span class="divider-text">Featured Stream</span>
-    
     <div class="divider-line"></div>
-
     <button id="shuffle-btn" class="btn-shuffle" aria-label="Shuffle Stream">
       Shuffle ↻
     </button>
   </div>
 
   <section 
-    class="photo-grid" 
+    class="photo-grid sharp-grid" 
     id="stream-grid"
     data-all-photos={JSON.stringify(allPhotos)} 
   >
     {randomStream.map((photo) => (
-      <PhotoCard photo={photo} />
+      <div class="masonry-item">
+        <PhotoCard photo={photo} />
+      </div>
     ))}
   </section>
 
@@ -86,80 +90,64 @@ const randomStream = allPhotos
 </BaseLayout>
 
 <script>
-  import PhotoCard from "../../components/PhotoCard.astro"; // Note: You can't import components in client scripts easily like this.
-  // Instead, we will generate the HTML string manually since it's simple.
-
+  // CLIENT SIDE SHUFFLE LOGIC
   document.addEventListener('astro:page-load', () => {
     const btn = document.getElementById('shuffle-btn');
     const grid = document.getElementById('stream-grid');
 
     if (btn && grid) {
-      // 1. Read the full list of photos from the data attribute
       const allPhotos = JSON.parse(grid.dataset.allPhotos || '[]');
 
       btn.addEventListener('click', () => {
-        // Visual Feedback
         const originalText = btn.innerHTML;
         btn.innerHTML = "↻"; 
         btn.style.opacity = "0.7";
         btn.style.pointerEvents = "none";
         
-        // fade out grid
         grid.style.opacity = "0.5";
         grid.style.transition = "opacity 0.2s";
 
         setTimeout(() => {
-          // 2. Pick 15 NEW random photos from the full list
           const newBatch = allPhotos
             .sort(() => 0.5 - Math.random())
             .slice(0, 15);
 
-          // 3. Rebuild the HTML (Clean version - CSS handles the styling now!)
           grid.innerHTML = newBatch.map(photo => {
             const webpSrc = photo.src.replace(/\.jpg$/, '.webp');
-            
+            // Re-creating the HTML for Masonry Items
             return `
-            <figure class="photo-card">
-              <a 
-                href="${photo.full}" 
-                data-pswp-width="${photo.width}" 
-                data-pswp-height="${photo.height}" 
-                class="pswp-link" 
-                aria-label="View full size: ${photo.alt || ''}"
-                target="_blank"
-              >
-                <picture>
-                  <source srcset="${webpSrc}" type="image/webp" />
-                  <img 
-                    src="${photo.src}" 
-                    alt="${photo.alt || ''}" 
-                    width="${photo.width}"
-                    height="${photo.height}"
-                    loading="lazy" 
-                    decoding="async"
-                  />
-                </picture>
-              </a>
-              
-              <div class="card-overlay">
-                ${photo.exif ? `<span class="overlay-exif">${photo.exif}</span>` : ''}
-                <div class="hidden-caption" style="display: none;">
-                  ${photo.exif ? `<small style="font-family: var(--font-mono); font-size: 0.8rem; opacity: 0.8;">${photo.exif}</small>` : ''}
-                </div>
-              </div>
-            </figure>
+            <div class="masonry-item">
+              <figure class="photo-card sharp-card">
+                <a 
+                  href="${photo.full}" 
+                  data-pswp-width="${photo.width}" 
+                  data-pswp-height="${photo.height}" 
+                  class="pswp-link" 
+                  aria-label="View full size: ${photo.alt || ''}"
+                  target="_blank"
+                >
+                  <picture>
+                    <source srcset="${webpSrc}" type="image/webp" />
+                    <img 
+                      src="${photo.src}" 
+                      alt="${photo.alt || ''}" 
+                      width="${photo.width}"
+                      height="${photo.height}"
+                      loading="lazy" 
+                      decoding="async"
+                    />
+                  </picture>
+                </a>
+                <div class="card-overlay"></div>
+              </figure>
+            </div>
             `;
           }).join('');
 
-          // Reset UI
           grid.style.opacity = "1";
-          btn.innerHTML = originalText; 
+          btn.innerHTML = originalText;
           btn.style.opacity = "1";
           btn.style.pointerEvents = "auto";
-          
-          // Re-initialize PhotoSwipe if you are using it
-          // (If PhotoSwipe is initialized globally on .photo-grid, it might need a re-scan. 
-          //  Usually, if it delegates events, you are fine. If not, you might need to dispatch an event here.)
         }, 300);
       });
     }
@@ -167,144 +155,206 @@ const randomStream = allPhotos
 </script>
 
 <style>
+  /* --- PAGE HEADER (Fixed "Floating" Issue) --- */
   .gallery-header {
-    margin-top: 0;
-    margin-bottom: 3rem;
+    margin-top: 3rem;
+    margin-bottom: 4rem;
+    display: flex;
+    justify-content: center;
   }
   
+  .header-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem; /* Tighter gap between title and desc */
+    border-bottom: 1px solid transparent; 
+  }
+
   .page-title {
     font-family: var(--font-serif);
-    font-size: 3rem;
-    margin: 0 0 0.5rem 0;
+    font-size: clamp(3rem, 5vw, 4rem); 
+    line-height: 1;
+    margin: 0;
     color: var(--text-main);
+  }
+  
+  /* Optional: A small accent line to anchor the text */
+  .line-break {
+    width: 40px;
+    height: 2px;
+    background: var(--brand-secondary); /* Gold accent */
+    margin: 0.5rem 0;
+    opacity: 0.6;
   }
 
   .page-desc {
+    font-family: var(--font-mono); 
     color: var(--text-muted);
-    font-size: 1.1rem;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin: 0;
   }
 
-  /* --- Gallery NAV --- */
-  .collections-nav { margin-bottom: 5rem; }
+  /* --- PILLAR NAVIGATION --- */
+  .collections-nav { 
+    margin-bottom: 5rem; 
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 2vw;
+  }
 
   .nav-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr); 
-    gap: 20px;
-  }
-  
-  @media (max-width: 900px) {
-    /* .nav-grid { grid-template-columns: 1fr; } */
-    .nav-grid { 
-        grid-template-columns: repeat(2, 1fr); 
-        gap: 8px; /* Tighter gap for mobile */
-    }
+    gap: 1.5rem; 
   }
 
-    /* Targets the standard mobile phone breakpoint */
-  @media (max-width: 600px) {
-      
-      /* 1. REDUCE GAP BELOW COLLECTIONS */
-      .collections-nav { 
-          /* Change from 5rem (desktop) to 2rem (mobile) */
-          margin-bottom: 2rem; 
-      }
-
-      /* 2. REDUCE GAP ABOVE STREAM TOOLBAR */
-      .stream-toolbar {
-          /* Remove the top padding/margin you had, or shrink it */
-          padding-top: 0rem; 
-          margin-top: 0rem;
-          /* Shrink the bottom margin slightly too */
-          margin-bottom: 1.5rem;
-      }
+  .nav-card {
+    text-decoration: none; 
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    cursor: pointer;
   }
-
-  .nav-card { text-decoration: none; group: pointer; }
 
   .nav-img-box {
-    aspect-ratio: 16/9;
-    border-radius: var(--radius);
+    aspect-ratio: 2/3; /* The Pillar Look */
+    width: 100%;
+    border-radius: 0; 
     overflow: hidden;
     position: relative;
-    margin-bottom: 0.75rem;
     background: var(--bg-surface);
   }
 
   .nav-img-box img {
-    width: 100%; height: 100%; object-fit: cover;
-    transition: transform 0.5s ease;
-    filter: grayscale(30%);
+    width: 100%;
+    height: 100%; 
+    object-fit: cover;
+    transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), filter 0.4s ease;
+    filter: grayscale(10%);
+    image-rendering: -webkit-optimize-contrast; 
   }
 
-  .nav-card:hover img { transform: scale(1.05); filter: grayscale(0%); }
+  .nav-card:hover .nav-img-box img { 
+    transform: scale(1.03); 
+    filter: grayscale(0%);
+  }
 
   .nav-overlay {
     position: absolute; inset: 0;
-    background: rgba(0,0,0,0.2);
+    background: rgba(0,0,0,0.3);
     display: flex; align-items: center; justify-content: center;
     opacity: 0; transition: opacity 0.3s ease;
   }
-
   .nav-card:hover .nav-overlay { opacity: 1; }
-  .arrow { color: white; font-size: 1.5rem; border: 1px solid white; padding: 5px 12px; border-radius: 50%; }
+
+  .arrow { 
+    color: white;
+    font-family: var(--font-mono);
+    font-size: 0.8rem; 
+    border: 1px solid white; 
+    padding: 8px 16px; 
+    border-radius: 0; /* Sharp button */
+    text-transform: uppercase;
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(4px);
+  }
+
+  .nav-meta {
+    display: flex; flex-direction: column; gap: 0.25rem;
+    border-left: 2px solid transparent; padding-left: 0;
+    transition: all 0.3s ease;
+  }
+  .nav-card:hover .nav-meta {
+    border-left-color: var(--brand-secondary); padding-left: 10px;
+  }
 
   .nav-title {
-    font-family: var(--font-serif);
-    font-size: 1.25rem;
-    color: var(--text-main);
-    text-transform: capitalize;
-    display: block;
+    font-family: var(--font-serif); font-size: 1.5rem; margin: 0;
+    color: var(--text-main); font-weight: 500;
   }
+  .nav-count { color: var(--text-muted); font-size: 0.75rem; }
 
-  .nav-count {
-    font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-muted);
-  }
-
-  /* --- NEW TOOLBAR STYLES --- */
+  /* --- STREAM TOOLBAR --- */
   .stream-toolbar {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    margin: 0 0 2rem 0;
-    padding-top: 2rem;
+    display: flex; align-items: center; gap: 1.5rem; margin: 0 auto 2rem;
+    max-width: 1400px; padding: 0 2vw;
   }
-
   .divider-text {
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.15em;
-    color: var(--text-muted);
-    white-space: nowrap; /* Prevents text from breaking */
-  }
-  
-  /* The Line */
-  .divider-line {
-    flex: 1; /* This makes the line grow to fill empty space */
-    height: 1px;
-    background: var(--border);
-    opacity: 0.5;
-  }
-
-  /* The Button */
-  .btn-shuffle {
-    background: transparent;
-    border: 1px solid var(--border);
-    padding: 6px 16px;
-    border-radius: 50px;
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: all 0.2s ease;
+    font-family: var(--font-mono); font-size: 0.75rem;
+    text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-muted);
     white-space: nowrap;
   }
-
+  .divider-line { flex: 1; height: 1px; background: var(--border); opacity: 0.5; }
+  .btn-shuffle {
+    background: transparent; border: 1px solid var(--border); padding: 6px 16px;
+    border-radius: 0; font-family: var(--font-mono); font-size: 0.7rem;
+    color: var(--text-muted); cursor: pointer; transition: all 0.2s ease;
+    text-transform: uppercase;
+  }
   .btn-shuffle:hover {
-    border-color: var(--text-main);
-    color: var(--text-main);
+    border-color: var(--text-main); color: var(--text-main); background: var(--bg-surface);
   }
 
-  .spacer-bottom { height: 4rem; }
+  /* --- THE TIGHT 4PX STREAM --- */
+  .photo-grid {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2vw;
+    
+    /* MASONRY COLUMNS */
+    column-count: 3;
+    
+    /* THE TIGHT GAP (Matches Home Page) */
+    column-gap: 4px;
+  }
+
+  .masonry-item {
+    /* Break inside avoid keeps the image from splitting across columns */
+    break-inside: avoid;
+    
+    /* Bottom spacing for the masonry items */
+    margin-bottom: 4px;
+  }
+
+  /* --- RESPONSIVE --- */
+  @media (max-width: 900px) {
+    .nav-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+    .photo-grid { column-count: 2; }
+  }
+
+  @media (max-width: 600px) {
+    .gallery-header { margin-top: 1rem; margin-bottom: 2rem; }
+    .page-title { font-size: 2.5rem; }
+    .nav-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+    .nav-title { font-size: 1.1rem; }
+    
+    /* On mobile, usually 2 columns is still good, or 1 if photos are detailed */
+    .photo-grid { column-count: 2; } 
+  }
+
+  .spacer-bottom { height: 6rem; }
+</style>
+
+<style is:global>
+  /* 1. Force Sharp Corners */
+  .sharp-grid .photo-card, 
+  .sharp-grid .photo-card img {
+    border-radius: 0 !important;
+  }
+  
+  /* 2. Remove default margins from PhotoCard component so Masonry handles it */
+  .sharp-grid .photo-card {
+    margin: 0 !important; 
+    width: 100%;
+    display: block;
+  }
+  
+  /* 3. Crisp Images */
+  .photo-grid img {
+    image-rendering: -webkit-optimize-contrast;
+  }
 </style>

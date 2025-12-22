@@ -3,303 +3,240 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import photosData from "../data/photos.json";
 
+// 1. HERO DATA
 const allPhotos = photosData.photos || [];
-const initialPhoto = allPhotos[Math.floor(Math.random() * allPhotos.length)];
-const fallbackImage = initialPhoto ? initialPhoto.full : "/images/ui/placeholder.jpg";
-const fallbackExif = initialPhoto?.exif || "Unknown Camera";
-const fallbackAlt = initialPhoto?.alt || "Featured photography shot";
+const heroCandidates = JSON.stringify(allPhotos.map(p => ({ 
+  full: p.full, 
+  alt: p.alt || "Featured photography shot", 
+  exif: p.exif || "Unknown Camera" 
+})));
+
+// 2. MOSAIC DATA
+// Shuffle and pick 8 photos
+const shuffled = [...allPhotos].sort(() => 0.5 - Math.random());
+const mosaicPhotos = shuffled.slice(0, 8); 
 ---
 
-<BaseLayout title="Home" description="The photography portfolio of J. R. Hernandez.">
+<BaseLayout title="Home" description="The photography portfolio of J.R.H.">
   
   <section class="hero-section">
-    
     <div class="hero-content">
-      
       <div class="text-group">
         <h1 class="hero-title">
           <span class="text-main">Heat Shock</span> 
           <span class="text-gold">Photography</span>
         </h1>
         <p class="hero-text">
-          Pictures from a life spent between cities. 
+          Pictures from a life spent between cities.
         </p>
       </div>
       
       <div class="cta-wrapper">
         <a href="/gallery" class="btn-primary">View the Gallery</a>
-        <a href="/resources" class="btn-text">View Resources &rarr;</a>
+        <a href="/info" class="btn-text">Info & Process &rarr;</a>
       </div>
-
     </div>
 
     <div class="hero-visual">
       <div class="polaroid-stack">
         <img 
-          id="random-hero-img"
-          src={fallbackImage} 
-          alt={fallbackAlt}
-          class="hero-img" 
+          id="hero-img"
+          src="" 
+          alt="Loading..."
+          class="hero-img is-loading" 
+          width="600"
+          height="750"
           loading="eager"
         />
         <div class="meta-tag">
             <span class="meta-label">FEATURED SHOT</span>
-            <span id="random-hero-exif" class="mono">{fallbackExif}</span>
+            <span id="hero-exif" class="mono">LOADING DATA...</span>
         </div>
       </div>
     </div>
+  </section>
 
+  <section class="mosaic-section">
+    <div class="grid-header">
+      <span class="mono-label">Selected Works // {new Date().getFullYear()}</span>
+    </div>
+
+    <div class="editorial-mosaic">
+      {mosaicPhotos.map((photo, index) => (
+        <div class={`mosaic-item item-${index}`}>
+          <img src={photo.full} alt={photo.alt || "Gallery image"} loading="lazy" />
+          <div class="overlay"></div>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section class="artist-statement">
+    <p>"I take photographs because they hold slivers of time and bring distant places close."</p>
+    <span class="signature">— J. R. H.</span>
   </section>
 
 </BaseLayout>
 
-<script define:vars={{ allPhotos }}>
-  function randomizeHero() {
-    if (!allPhotos || allPhotos.length === 0) return;
-    const img = document.getElementById('random-hero-img');
-    const meta = document.getElementById('random-hero-exif');
-    if (img && meta) {
-      const random = allPhotos[Math.floor(Math.random() * allPhotos.length)];
-      img.src = random.full;
-      img.alt = random.alt || "Featured photography shot";
-      meta.textContent = random.exif || "Unknown Camera";
+<script id="hero-data" type="application/json" set:html={heroCandidates}></script>
+
+<script is:inline>
+  function initHero() {
+    const dataEl = document.getElementById('hero-data');
+    const img = document.getElementById('hero-img');
+    const exif = document.getElementById('hero-exif');
+    if (!dataEl || !img || !exif) return;
+
+    const candidates = JSON.parse(dataEl.textContent);
+    const last = sessionStorage.getItem("lastHero");
+    let pick = candidates[Math.floor(Math.random() * candidates.length)];
+    
+    // Retry logic
+    for (let i = 0; i < 5 && pick.full === last; i++) {
+      pick = candidates[Math.floor(Math.random() * candidates.length)];
     }
+    sessionStorage.setItem("lastHero", pick.full);
+
+    img.src = pick.full;
+    img.alt = pick.alt;
+    exif.textContent = pick.exif;
+
+    if (img.complete) { img.classList.remove('is-loading'); } 
+    else { img.onload = () => img.classList.remove('is-loading'); }
   }
-  randomizeHero();
-  document.addEventListener('astro:after-swap', randomizeHero);
+  initHero();
+  document.addEventListener('astro:after-swap', initHero);
 </script>
 
 <style>
-  /* === MOBILE LAYOUT (Default) === */
+  /* === HERO STYLES === */
   .hero-section {
-    min-height: 85svh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    /* Clean spacing */
-    padding: 1rem 1.5rem 3rem 1.5rem;
-    gap: 2rem;
-  }
-
-  /* MAGIC TRICK for Mobile Reordering:
-     display: contents makes the .hero-content div "disappear" from the layout,
-     so its children (.text-group and .cta-wrapper) become direct siblings 
-     of .hero-visual. This lets us shuffle them with 'order'.
-  */
-  .hero-content {
-    display: contents;
-  }
-
-  /* 1. TITLE & SUBTITLE */
-  .text-group {
-    order: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 0.75rem;
-    width: 100%;
-    margin-bottom: 0.5rem;
-  }
-
-  /* 2. PHOTO */
-  .hero-visual {
-    order: 2;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    position: relative;
-    z-index: 1;
-    margin-bottom: 1rem; /* Breathing room before buttons */
-  }
-
-  /* 3. BUTTONS */
-  .cta-wrapper {
-    order: 3;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    width: 100%;
-    align-items: center;
-  }
-
-  /* === DESKTOP LAYOUT (900px+) === */
-  @media (min-width: 900px) {
-    .hero-section {
-      display: grid;
-      grid-template-columns: 1fr 1fr; /* Equal width split */
-      gap: 4rem;
-      padding: 4rem 5vw;
-      align-items: center;
-    }
-
-    /* Restore the Wrapper container */
-    .hero-content {
-      display: flex; /* Turn the container back on */
-      flex-direction: column;
-      align-items: flex-start;
-      text-align: left;
-      order: unset; /* Reset order */
-    }
+    min-height: 85svh; 
+    display: flex; flex-direction: column; align-items: center;
+    padding: 1rem 1.5rem 3rem 1.5rem; gap: 2rem;
     
-    .text-group { 
-      order: unset; 
-      align-items: flex-start; 
-      text-align: left;
-      gap: 1rem; 
-    }
+    /* CRITICAL FIX: Clips anything that pokes out, preventing horizontal scrollbars */
+    overflow-x: hidden; 
+    width: 100%;
+  }
+  .hero-content { display: contents; }
+  .text-group { order: 1; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.75rem; width: 100%; margin-bottom: 0.5rem; }
+  .hero-visual { order: 2; width: 100%; display: flex; justify-content: center; position: relative; z-index: 1; margin-bottom: 1rem; }
+  .cta-wrapper { order: 3; display: flex; flex-direction: column; gap: 1rem; width: 100%; align-items: center; }
 
-    .cta-wrapper {
-      order: unset;
-      flex-direction: row;
-      width: auto;
-      margin-top: 2rem; 
-    }
-
-    .hero-visual {
-      order: unset;
-      margin-bottom: 0;
-    }
+  @media (min-width: 900px) {
+    .hero-section { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; padding: 4rem 5vw; align-items: center; }
+    .hero-content { display: flex; flex-direction: column; align-items: flex-start; text-align: left; order: unset; }
+    .text-group { order: unset; align-items: flex-start; text-align: left; gap: 1rem; }
+    .cta-wrapper { order: unset; flex-direction: row; width: auto; margin-top: 2rem; }
+    .hero-visual { order: unset; margin-bottom: 0; }
   }
 
-  /* === TYPOGRAPHY === */
-  .hero-title {
-    font-family: var(--font-serif);
-    font-size: clamp(3rem, 7vw, 5.5rem);
-    line-height: 1.05;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-  }
-
+  .hero-title { font-family: var(--font-serif); font-size: clamp(3rem, 7vw, 5.5rem); line-height: 1.05; margin: 0; }
   .text-main { color: var(--text-main); }
-  
-  .text-gold {
-    color: var(--brand-secondary);
-    filter: brightness(0.9); 
-    font-weight: 700;
-  }
+  .text-gold { color: var(--brand-secondary); filter: brightness(0.9); font-weight: 700; }
+  .hero-text { font-family: var(--font-sans); font-size: 1.25rem; color: var(--text-muted); }
 
-  .hero-text {
-    font-family: var(--font-sans);
-    font-size: 1.25rem;
-    color: var(--text-muted);
-    line-height: 1.5;
-    margin: 0;
-    font-weight: 400;
+  .btn-primary { 
+    background-color: var(--text-main); color: var(--bg-paper); padding: 16px 36px; 
+    border-radius: 50px; text-decoration: none; font-family: var(--font-sans); 
+    box-shadow: 0 4px 15px rgba(0,0,0, 0.1); 
   }
+  .btn-text { color: var(--text-main); text-decoration: none; font-family: var(--font-sans); }
 
-  /* === BUTTONS === */
-  .btn-primary {
-    background-color: var(--text-main);
-    color: var(--bg-paper);
-    padding: 16px 36px;
-    border-radius: 50px;
-    text-decoration: none;
-    font-family: var(--font-sans);
-    font-size: 1rem;
-    font-weight: 500;
-    width: 100%;
-    text-align: center;
-    transition: transform 0.2s ease, opacity 0.2s ease;
-    box-shadow: 0 4px 15px rgba(0,0,0, 0.1);
-  }
-  @media (min-width: 900px) { .btn-primary { width: auto; } }
-
-  .btn-primary:hover {
-    transform: translateY(-2px);
-    opacity: 0.85;
-  }
-
-  .btn-text {
-    color: var(--text-main);
-    text-decoration: none;
-    font-family: var(--font-sans);
-    font-size: 1rem;
-    font-weight: 500;
-    border-bottom: 1px solid transparent;
-    transition: border-color 0.2s ease;
-  }
-  
-  .btn-text:hover { 
-    border-bottom-color: var(--brand-secondary);
-    color: var(--brand-secondary);
-  }
-
-  /* === VISUALS === */
-  .polaroid-stack {
-    position: relative;
-    width: 100%;
-    max-width: 600px;
+  /* === POLAROID STACK (SIZE RESTORED) === */
+  .polaroid-stack { 
+    position: relative; 
+    width: 100%; 
+    /* INCREASED: Bumped up to 550px so it's large on desktop */
+    max-width: 550px; 
   }
 
   .hero-img {
-    width: 100%;
-    height: auto;
-    aspect-ratio: 4/5;
+    width: 100%; 
+    height: auto; 
+    aspect-ratio: 4/5; 
     object-fit: cover;
+    
     border-radius: var(--radius);
     box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15);
-    transform: rotate(2deg);
-    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-    will-change: transform;
-    backface-visibility: hidden;
+    transform: rotate(2deg); will-change: transform, opacity; backface-visibility: hidden;
+    transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease-in; 
+    opacity: 1; 
+    
+    /* TALLER LIMIT: Allows image to grow taller (80% of screen) */
+    max-height: 80vh; 
+    margin: 0 auto;
+    display: block;
   }
-
+  .hero-img.is-loading { opacity: 0; }
   .hero-visual:hover .hero-img { transform: rotate(0deg) scale(1.02); }
 
-  /* === META TAG (Fixed for Night Mode) === */
-  .meta-tag {
-    position: absolute;
-    bottom: 25px;
-    right: -15px;
-    
-    /* FIX: Use surface color so it turns dark in night mode */
-    background: var(--bg-surface); 
-    border: 1px solid var(--border);
-    
-    padding: 10px 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+  .meta-tag { 
+    position: absolute; bottom: 25px; right: -15px; 
+    background: var(--bg-surface); border: 1px solid var(--border); 
+    padding: 10px 20px; 
+    display: flex; flex-direction: column; gap: 4px;
     box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-    border-radius: 2px;
+    border-radius: 2px; 
     z-index: 2;
-    transform: rotate(-1.5deg);
+    transform: rotate(-1.5deg); 
+  }
+  .meta-label { 
+    font-family: var(--font-sans); font-size: 0.7rem; color: var(--brand-secondary); 
+    text-transform: uppercase; font-weight: 800; letter-spacing: 0.1em;
+  }
+  .mono { font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-main); }
+
+  /* === SHARP MOSAIC STYLES === */
+  .mosaic-section {
+    padding: 0 2vw 6rem;
+    max-width: 1600px;
+    margin: 0 auto;
+    overflow: hidden; 
+  }
+  
+  .grid-header { 
+    display: flex; align-items: center; margin-bottom: 2rem; opacity: 0.9;
+    border-bottom: 1px solid var(--border); padding-bottom: 1rem;
+  }
+  .mono-label { font-family: var(--font-mono); font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+  .editorial-mosaic {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px; 
+    grid-auto-rows: 300px;
   }
 
-  .meta-label {
-    font-family: var(--font-sans);
-    font-size: 0.7rem;
-    font-weight: 800;
-    letter-spacing: 0.1em;
-    color: var(--brand-secondary);
-    text-transform: uppercase;
+  .mosaic-item {
+    position: relative;
+    overflow: hidden;
+    border-radius: 0; 
+  }
+  
+  .mosaic-item img {
+    width: 100%; height: 100%; object-fit: cover;
+    transition: transform 0.7s cubic-bezier(0.25, 1, 0.5, 1);
+    image-rendering: -webkit-optimize-contrast;
+  }
+  
+  .mosaic-item:hover img { transform: scale(1.02); }
+
+  @media (min-width: 1024px) {
+    .editorial-mosaic {
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(2, 425px); 
+    }
+
+    .item-0 { grid-column: 1 / 3; grid-row: 1 / 3; } 
+    .item-1 { grid-column: 3 / 4; grid-row: 1 / 2; }
+    .item-2 { grid-column: 4 / 5; grid-row: 1 / 2; }
+    .item-3 { grid-column: 3 / 5; grid-row: 2 / 3; } 
   }
 
-  .mono {
-    font-family: var(--font-mono);
-    font-size: 0.85rem;
-    /* FIX: This now contrasts correctly against --bg-surface in both modes */
-    color: var(--text-main); 
-  }
-
-  @media (max-width: 900px) {
-    /* 1. Allow the sticker to stay tilted on mobile too */
-    .meta-tag { 
-      right: -5px; /* Slight hang-off look */
-      bottom: 0; 
-      transform: rotate(-1.5deg); /* Matches the "messy" vibe */
-    }
-    
-    /* 2. Ensure photo stays tilted (Default behavior, but good to be explicit) */
-    .hero-visual { 
-      margin-top: 0; 
-    }
-    
-    .hero-img {
-      /* Optional: You can slightly reduce the tilt on mobile if 2deg feels too aggressive */
-      transform: rotate(2deg); 
-    }
-  }
+  /* === ARTIST STATEMENT === */
+  .artist-statement { padding: 8rem 1.5rem; text-align: center; max-width: 700px; margin: 0 auto; }
+  .artist-statement p { font-family: var(--font-serif); font-size: clamp(1.25rem, 2.5vw, 1.75rem); line-height: 1.5; color: var(--text-muted); font-style: italic; }
+  .signature { display: block; margin-top: 1.5rem; color: var(--brand-secondary); text-transform: uppercase; letter-spacing: 0.2em; }
 </style>
