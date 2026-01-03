@@ -1,17 +1,37 @@
 ---
 /* src/components/Footer.astro */
 const currentYear = new Date().getFullYear();
+const EMAIL_ADDRESS = "photos@heatshockpineapple.com";
 ---
 
 <footer class="site-footer">
   <div class="footer-inner">
     
     <div class="footer-brand">
-      <span class="brand-text">Heat Shock<span class="gold">Pineapple</span></span>
-      <p class="copyright">&copy; {currentYear} Jason Hernandez</p>
+      
+      <div class="brand-lockup">
+        <img 
+          src="/android-chrome-512x512.png" 
+          alt="Heat Shock Pineapple" 
+          class="footer-logo" 
+          height="32" 
+          width="32" 
+        />
+        
+        <div class="brand-block">
+          <span class="word-top">HEATSHOCK</span>
+          <span class="word-btm gold">PINEAPPLE</span>
+        </div>
+      </div>
+      
+      <div class="meta-group">
+        <p class="copyright">&copy; {currentYear} Jason Hernandez</p>
+        <p class="location">Based in Los Angeles</p>
+      </div>
     </div>
 
     <div class="footer-links">
+      <a href={`mailto:${EMAIL_ADDRESS}`}>Email</a>
       <a href="https://github.com/jarohe318" target="_blank" rel="noopener noreferrer">GitHub</a>
       <a href="https://heatshockpineapple.substack.com" target="_blank" rel="noopener noreferrer">Substack</a>
       <a href="https://www.linkedin.com/in/jrh318" target="_blank" rel="noopener noreferrer">LinkedIn</a>
@@ -21,24 +41,36 @@ const currentYear = new Date().getFullYear();
 </footer>
 
 <style>
+  /* =========================================
+     FOOTER LAYOUT
+     ========================================= */
   .site-footer {
     width: 100%;
-    /* TOKEN: Matches Header Background */
-    background: var(--color-jungle-800);
-    /* CHANGE: Hardcoded to white so it never flips to black, even if theme vars change */
-    color: #ffffff;
+    /* TOKEN: Matches Header Background (Jungle Green) */
+    background: var(--color-jungle-800, #243b30);
+    /* TOKEN: Matches Header Text (White) */
+    color: var(--text-inverse, #ffffff);
+    
+    /* Layout Logic */
     margin-top: 6rem;
-    padding: 3rem 0;
+    padding: 3rem 0; 
+    
+    /* THE FIXES: Prevents scrolling bugs & squished content */
+    overflow: hidden;
+    flex-shrink: 0; 
+    
+    /* Visual Separator */
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   .footer-inner {
     width: 100%;
     max-width: 1600px;
     margin: 0 auto;
-    padding: 0 2rem;
+    padding: 0 1.5rem; 
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 2.5rem;
   }
 
   @media (min-width: 768px) {
@@ -49,51 +81,99 @@ const currentYear = new Date().getFullYear();
     }
   }
 
-  /* BRANDING */
+  /* =========================================
+     BRANDING LOCKUP
+     ========================================= */
   .footer-brand {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 1rem; 
   }
 
-  .brand-text {
-    font-family: var(--font-serif);
-    font-size: 1.25rem;
-    font-weight: 600;
-    /* CHANGE: Inherit ensures it stays white like the parent container */
-    color: inherit;
-    word-spacing: -0.15em; 
+  .brand-lockup {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem; /* Matches Header Gap */
   }
 
-  /* .gold class is handled by global.css utility */
+  .footer-logo {
+    height: 32px;
+    width: auto; 
+    border-radius: 4px;
+    display: block;
+    object-fit: contain;
+  }
+
+  .brand-block {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    line-height: 1;
+    transform: translateY(1px); /* Optical alignment */
+  }
+
+  .word-top, .word-btm {
+    font-family: var(--font-sans);
+    font-weight: 900; 
+    font-size: 0.85rem; 
+    color: inherit; 
+    display: block;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .word-top {
+    letter-spacing: 0.3em;
+  }
+
+  .word-btm {
+    /* Precise spacing for alignment */
+    letter-spacing: 0.4065em;
+  }
+
   .gold {
-    font-style: normal;
-    margin-left: 0.2em;
+    color: var(--brand-secondary, #ffd700);
   }
 
-  .copyright {
+  /* === METADATA === */
+  .meta-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .copyright, .location {
     font-family: var(--font-mono);
-    font-size: 0.85rem;
+    font-size: 0.75rem; 
     color: rgba(255, 255, 255, 0.5);
     margin: 0;
+    line-height: 1.4;
   }
 
-  /* LINKS */
+  /* =========================================
+     LINKS
+     ========================================= */
   .footer-links {
     display: flex;
+    flex-wrap: wrap;
     gap: 1.5rem;
   }
 
   .footer-links a {
     font-family: var(--font-sans);
-    font-size: 0.95rem;
+    font-size: 0.75rem; 
     font-weight: 500;
     color: rgba(255, 255, 255, 0.7);
     text-decoration: none;
-    transition: color 0.2s;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    border-bottom: 1px solid transparent;
+    padding-bottom: 2px;
   }
 
   .footer-links a:hover {
-    color: #ffffff;
+    color: var(--text-inverse, #ffffff);
+    letter-spacing: 0.15em;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
   }
 </style>

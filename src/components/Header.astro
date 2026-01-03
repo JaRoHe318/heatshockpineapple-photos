@@ -9,7 +9,6 @@ const currentPath = pathname.slice(1);
 /* HELPER: Checks active state for links */
 const isActive = (path: string) => {
   if (path === HOME_LINK) return currentPath === "";
-  // Removes leading slash for comparison
   const cleanPath = path.startsWith('/') ? path.slice(1) : path;
   return currentPath.startsWith(cleanPath);
 };
@@ -19,33 +18,26 @@ const isActive = (path: string) => {
   <div class="header-inner">
     
     <a href={BRAND_LINK} class="site-title">
-      <img src="/android-chrome-192x192.png" alt="Heat Shock Pineapple" class="header-logo" />
-      <span class="brand-text">
-        <span class="brand-main">Heat Shock</span><span class="gold"> Pineapple</span>
-      </span>
+      <img src="/android-chrome-512x512.png" alt="Heat Shock Pineapple" class="header-logo" />
+      
+      <div class="brand-block">
+        <span class="word-top">HEATSHOCK</span>
+        <span class="word-btm gold">PINEAPPLE</span>
+      </div>
     </a>
 
     <div class="header-controls">
       <nav id="site-nav" class="site-nav" aria-label="Main Navigation">
         
-        <a href={HOME_LINK} 
-           class={isActive(HOME_LINK) ? "active" : ""}
-           aria-current={isActive(HOME_LINK) ? "page" : undefined}
-        >
+        <a href={HOME_LINK} class={isActive(HOME_LINK) ? "active" : ""} aria-current={isActive(HOME_LINK) ? "page" : undefined}>
           Home
         </a>
 
-        <a href="/gallery" 
-           class={isActive("/gallery") ? "active" : ""}
-           aria-current={isActive("/gallery") ? "page" : undefined}
-        >
+        <a href="/gallery" class={isActive("/gallery") ? "active" : ""} aria-current={isActive("/gallery") ? "page" : undefined}>
           Gallery
         </a>
 
-        <a href="/info" 
-           class={isActive("/info") ? "active" : ""}
-           aria-current={isActive("/info") ? "page" : undefined}
-        >
+        <a href="/info" class={isActive("/info") ? "active" : ""} aria-current={isActive("/info") ? "page" : undefined}>
           Info
         </a>
 
@@ -67,14 +59,7 @@ const isActive = (path: string) => {
         <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
       </button>
 
-      <button 
-        id="menu-toggle" 
-        class="menu-toggle" 
-        aria-label="Toggle Menu" 
-        aria-controls="site-nav"
-        aria-expanded="false"
-        type="button"
-      >
+      <button id="menu-toggle" class="menu-toggle" aria-label="Toggle Menu" aria-controls="site-nav" aria-expanded="false" type="button">
         <span class="bar"></span><span class="bar"></span><span class="bar"></span>
       </button>
       
@@ -84,59 +69,55 @@ const isActive = (path: string) => {
 
 <script>
   function setupHeader() {
-    let menuToggle = document.getElementById('menu-toggle');
+    let menuToggle = document.getElementById('menu-toggle') as HTMLElement | null;
     const nav = document.getElementById('site-nav');
     const themeToggles = document.querySelectorAll('.theme-toggle');
 
-    // HELPER: Strips old listeners cleanly
-    const replaceWithClone = (el) => {
+    const replaceWithClone = (el: Element): Element => {
       if (!el?.parentNode) return el;
-      const clone = el.cloneNode(true);
+      const clone = el.cloneNode(true) as Element;
       el.parentNode.replaceChild(clone, el);
       return clone;
     };
 
     if (menuToggle && nav) {
-      const newToggle = replaceWithClone(menuToggle);
+      const newToggle = replaceWithClone(menuToggle) as HTMLElement;
       menuToggle = newToggle;
 
-      // Logic to sync Visuals (classes) and Digital State (ARIA)
-      const setMenuState = (isOpen) => {
+      const setMenuState = (isOpen: boolean) => {
+        if (!menuToggle) return;
+
         if (isOpen) {
           menuToggle.classList.add('open');
-          menuToggle.setAttribute('aria-expanded', 'true'); // A11Y
+          menuToggle.setAttribute('aria-expanded', 'true');
           nav.classList.add('open');
           document.body.style.overflow = 'hidden';
         } else {
           menuToggle.classList.remove('open');
-          menuToggle.setAttribute('aria-expanded', 'false'); // A11Y
+          menuToggle.setAttribute('aria-expanded', 'false');
           nav.classList.remove('open');
           document.body.style.overflow = '';
         }
       };
 
-      // Toggle Button
-      menuToggle.addEventListener('click', (e) => {
+      menuToggle.addEventListener('click', (e: Event) => {
         e.stopPropagation();
         const isCurrentlyOpen = nav.classList.contains('open');
         setMenuState(!isCurrentlyOpen);
       });
 
-      // Link Click (Close)
       nav.querySelectorAll('a').forEach((link) => {
         link.addEventListener('click', () => setMenuState(false));
       });
-
-      // Background Click (Close)
-      nav.addEventListener('click', (e) => {
+      
+      nav.addEventListener('click', (e: Event) => {
         if (e.target === nav) setMenuState(false);
       });
     }
 
-    // THEME TOGGLE
     themeToggles.forEach((btn) => {
       const newBtn = replaceWithClone(btn);
-      newBtn.addEventListener('click', (e) => {
+      newBtn.addEventListener('click', (e: Event) => {
         e.stopPropagation(); 
         const element = document.documentElement;
         const current = element.getAttribute("data-theme");
@@ -161,41 +142,66 @@ const isActive = (path: string) => {
   
   .site-header::before {
     content: ""; position: absolute; inset: 0; z-index: -1;
-    /* TOKEN: Jungle Green Background */
-    background: var(--color-jungle-800); 
+    /* TOKEN: Jungle Green */
+    background: var(--color-jungle-800, #243b30); 
     opacity: 0.95;
     backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(255,255,255,0.1);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
   }
 
   .header-inner { 
     width: 100%; max-width: 1600px; margin: 0 auto; 
-    padding: 0 2rem; 
+    padding: 0 1.5rem; 
     display: flex; justify-content: space-between; align-items: center; 
   }
   
-  /* BRANDING */
-  .site-title { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; z-index: 1002; }
-  
-  .brand-text { 
-    font-family: var(--font-serif); 
-    font-weight: 600; 
-    font-size: 1.3rem; 
-    /* TOKEN: White Text */
-    color: var(--text-inverse);
-    word-spacing: -0.15em;
-    letter-spacing: 0.01em; 
+  /* === UPDATED BRANDING === */
+  .site-title { 
+    display: flex;
+    align-items: center; 
+    gap: 0.4rem; /* Specific Gap from Portfolio */
+    text-decoration: none; 
+    z-index: 1002;
   }
   
-  /* PINEAPPLE: Uses .gold global utility */
+  .header-logo { 
+    height: 32px; 
+    width: auto; 
+    border-radius: 4px;
+    display: block;
+  }
+
+  /* Stacked Text Block */
+  .brand-block {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    line-height: 1;
+    transform: translateY(1px);
+  }
+
+  .word-top, .word-btm {
+    font-family: var(--font-sans); /* Switched to Sans to match Portfolio */
+    font-weight: 900;
+    font-size: 0.85rem; 
+    color: var(--text-inverse, #ffffff);
+    display: block;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .word-top {
+    letter-spacing: 0.3em;
+  }
+
+  .word-btm {
+    letter-spacing: 0.4065em;
+  }
+  
   .gold { 
-    font-style: normal;
-    font-size: 1.02em; 
+    color: var(--brand-secondary, #ffd700);
   }
 
-  .header-logo { height: 32px; width: auto; border-radius: 4px; }
-
-  /* CONTROLS */
+  /* === CONTROLS === */
   .header-controls { display: flex; align-items: center; gap: 1rem; }
   .control-separator { width: 1px; height: 24px; background: rgba(255,255,255,0.2); margin: 0 0.5rem; }
 
@@ -204,25 +210,22 @@ const isActive = (path: string) => {
     background: none; border: none; cursor: pointer; padding: 5px; display: flex; align-items: center; transition: color 0.2s;
     color: rgba(255,255,255,0.7);
   }
-  .icon-btn:hover { color: var(--text-inverse); }
+  .icon-btn:hover { color: var(--text-inverse, #ffffff); }
   .icon-row { display: flex; align-items: center; gap: 10px; }
 
-  /* NAV LINKS (Desktop) */
+  /* NAV LINKS */
   .site-nav { display: flex; gap: 1.5rem; }
   .site-nav a { 
     font-size: 1.05rem; font-weight: 500; text-decoration: none; font-family: var(--font-sans); 
     color: rgba(255,255,255,0.7);
   }
-  .site-nav a:hover, .site-nav a.active { color: var(--text-inverse); }
+  .site-nav a:hover, .site-nav a.active { color: var(--text-inverse, #ffffff); }
   
   /* THEME ICONS */
-  /* Default (Dark Mode) -> Show Moon */
-  .sun-icon { display: none; }
-  .moon-icon { display: block; }
-
-  /* Light Mode Override -> Show Sun */
-  :global([data-theme="light"]) .sun-icon { display: block; }
-  :global([data-theme="light"]) .moon-icon { display: none; }
+  .moon-icon { display: none; }
+  .sun-icon { display: block; }
+  :global([data-theme="dark"]) .sun-icon { display: none; }
+  :global([data-theme="dark"]) .moon-icon { display: block; }
 
   /* RESPONSIVE */
   .menu-toggle { display: none; }
@@ -232,27 +235,24 @@ const isActive = (path: string) => {
     .desktop-only { display: none !important; }
     
     .menu-toggle { display: flex; flex-direction: column; justify-content: space-between; width: 30px; height: 21px; background: transparent; border: none; cursor: pointer; z-index: 1002; padding: 0; }
-    .bar { width: 100%; height: 3px; background-color: var(--text-inverse); border-radius: 3px; transition: all 0.3s ease; }
+    .bar { width: 100%; height: 3px; background-color: var(--text-inverse, #ffffff); border-radius: 3px; transition: all 0.3s ease; }
     
     .menu-toggle.open .bar:nth-child(1) { transform: translateY(9px) rotate(45deg); }
     .menu-toggle.open .bar:nth-child(2) { opacity: 0; }
     .menu-toggle.open .bar:nth-child(3) { transform: translateY(-9px) rotate(-45deg); }
 
-    /* MOBILE MENU (Transforms .site-nav into overlay) */
     .site-nav { display: none; }
-    
     .site-nav.open {
       display: flex; position: fixed; inset: 0; 
-      /* TOKEN: Green Background */
-      background-color: var(--color-jungle-800);
+      background-color: var(--color-jungle-800, #243b30); 
       flex-direction: column; justify-content: center; align-items: center; gap: 2rem; z-index: 1001;
     }
-    .site-nav.open a { font-size: 1.5rem; font-weight: 600; color: var(--text-inverse); }
+    .site-nav.open a { font-size: 1.5rem; font-weight: 600; color: var(--text-inverse, #ffffff); }
     
     .mobile-icons { 
       display: flex; gap: 2rem; margin-top: 2rem; padding-top: 2rem; 
       border-top: 1px solid rgba(255,255,255,0.2); 
     }
-    .mobile-icons .icon-btn { flex-direction: column; gap: 8px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-inverse); }
+    .mobile-icons .icon-btn { flex-direction: column; gap: 8px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-inverse, #ffffff); }
   }
 </style>
