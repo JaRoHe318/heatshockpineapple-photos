@@ -4,17 +4,10 @@ import BaseLayout from "../../../layouts/BaseLayout.astro";
 import PhotoCard from "../../../components/PhotoCard.astro";
 import photosData from "../../../data/photos.json";
 
-// Interface
 interface Photo {
-  id: string;
-  src: string;
-  full: string;
-  alt: string;
-  collection: string;
-  album: string | null;
-  exif?: string;
-  width: number;
-  height: number;
+  id: string; src: string; full: string; alt: string;
+  collection: string; album: string | null; exif?: string;
+  width: number; height: number;
 }
 
 export async function getStaticPaths() {
@@ -23,52 +16,32 @@ export async function getStaticPaths() {
   
   return uniqueCollections.map(col => ({
     params: { collection: col },
-    props: { 
-      photos: allPhotos.filter(p => p.collection === col)
-    }
+    props: { photos: allPhotos.filter(p => p.collection === col) }
   }));
 }
 
 const { collection } = Astro.params;
 const { photos } = Astro.props;
 
-// --- CONFIG: Collection Definitions ---
+// --- CONFIG ---
 const collectionInfo = {
-  street: {
-    title: "Street",
-    desc: "The unscripted choreography of the city. Observations from Boston, Chicago, and New York."
-  },
-  cities: {
-    title: "Cities", 
-    desc: "Visual notes from the spaces in between. Not about the destination, but the displacement of being somewhere new."
-  },
-  portrait: {
-    title: "Portraits",
-    desc: "The variable element. Friends, strangers, and the brief moments of eye contact that break the pattern."
-  },
-  uncategorized: {
-    title: "Archive",
-    desc: "Miscellaneous shots from the cutting room floor."
-  }
+  street: { title: "Street", desc: "The unscripted choreography of the city. Observations from Boston, Chicago, and New York." },
+  cities: { title: "Cities", desc: "Visual notes from the spaces in between. Not about the destination, but the displacement of being somewhere new." },
+  portrait: { title: "Portraits", desc: "The variable element. Friends, strangers, and the brief moments of eye contact that break the pattern." },
+  uncategorized: { title: "Archive", desc: "Miscellaneous shots from the cutting room floor." }
 };
 
 const collectionKey = collection.toLowerCase() as keyof typeof collectionInfo;
 const currentInfo = collectionInfo[collectionKey] || { title: collection, desc: "A collection of photos." };
 const displayTitle = currentInfo.title;
 
-// 2. SEPARATE CONTENT
 const albumPhotos = photos.filter(p => p.album !== null);
 const uniqueAlbums = [...new Set(albumPhotos.map(p => p.album))];
 const streamPhotos = photos.filter(p => p.album === null);
 
-// 3. PREPARE ALBUM CARDS
 const albumCards = uniqueAlbums.map(name => {
   const pics = albumPhotos.filter(p => p.album === name);
-  return {
-    name: name,
-    count: pics.length,
-    cover: pics[0]?.src
-  };
+  return { name: name, count: pics.length, cover: pics[0]?.src };
 });
 ---
 
@@ -141,76 +114,60 @@ const albumCards = uniqueAlbums.map(name => {
   .collection-header {
     margin: 3rem 0 5rem 0;
     display: flex;
-    justify-content: center;
+    /* LEFT ALIGN */
+    justify-content: flex-start;
+    max-width: 1400px; margin-left: auto; margin-right: auto;
+    padding: 0 2vw;
   }
 
   .header-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
+    display: flex; flex-direction: column;
+    /* LEFT ALIGN */
+    align-items: flex-start;
+    text-align: left;
     gap: 0.75rem;
     max-width: 700px;
-    padding: 0 1.5rem;
+    /* No horizontal padding needed here as parent handles it */
   }
 
   .back-link {
-    font-family: var(--font-mono);
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-bottom: 0.5rem;
-    text-decoration: none;
-    transition: color 0.2s;
+    font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem;
+    text-decoration: none; transition: color 0.2s;
   }
   .back-link:hover { color: var(--brand-secondary); }
 
   .collection-title {
-    font-family: var(--font-sans);
-    font-weight: 900;
-    font-size: clamp(3rem, 5vw, 4rem);
-    line-height: 1;
-    margin: 0;
-    color: var(--text-main);
-    text-transform: uppercase;
+    font-family: var(--font-sans); font-weight: 900;
+    font-size: clamp(3rem, 5vw, 4rem); line-height: 1; margin: 0;
+    color: var(--text-main); text-transform: uppercase;
   }
 
   .line-break {
-    width: 40px;
-    height: 2px;
-    background: var(--brand-secondary);
-    margin: 0.5rem 0;
-    opacity: 0.6;
+    width: 40px; height: 2px; background: var(--brand-secondary);
+    margin: 0.5rem 0; opacity: 0.6;
+    /* LEFT ALIGN */
+    align-self: flex-start;
   }
 
   .collection-desc {
-    font-family: var(--font-sans);
-    font-size: 1.1rem;
-    color: var(--text-muted);
-    line-height: 1.6;
+    font-family: var(--font-sans); font-size: 1.1rem;
+    color: var(--text-muted); line-height: 1.6;
   }
 
   .collection-meta {
-    font-family: var(--font-mono);
-    font-size: 0.9rem;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    opacity: 0.7;
-    margin-top: 1rem;
+    font-family: var(--font-mono); font-size: 0.9rem;
+    color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em;
+    opacity: 0.7; margin-top: 1rem;
   }
 
   /* --- SECTION HEADERS --- */
   .grid-header {
-    display: flex; align-items: center;
-    gap: 1rem; margin-bottom: 2rem; opacity: 0.8;
+    display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem; opacity: 0.8;
     max-width: 1400px; margin-left: auto; margin-right: auto; padding: 0 2vw;
   }
   .mono-label {
-    font-family: var(--font-mono); 
-    font-size: 1rem; 
-    color: var(--text-muted);
+    font-family: var(--font-mono); font-size: 1rem; color: var(--text-muted);
     text-transform: uppercase; letter-spacing: 0.1em; white-space: nowrap;
   }
   .line { width: 100%; height: 1px; background: var(--border); opacity: 0.5; }
@@ -219,32 +176,23 @@ const albumCards = uniqueAlbums.map(name => {
   .albums-section { margin-bottom: 6rem; }
 
   .album-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.5rem;
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;
     max-width: 1400px; margin: 0 auto; padding: 0 2vw;
   }
-  @media (min-width: 900px) {
-    .album-grid { grid-template-columns: repeat(3, 1fr); }
-  }
+  @media (min-width: 900px) { .album-grid { grid-template-columns: repeat(3, 1fr); } }
 
   .album-card { text-decoration: none; display: flex; flex-direction: column; gap: 1rem; cursor: pointer; }
 
   .album-cover {
-    /* UPDATED: Changed from 2/3 (Tall) to 1/1 (Square) */
+    /* SQUARE RATIO */
     aspect-ratio: 1/1; 
-    width: 100%;
-    position: relative;
-    background: var(--bg-surface);
-    overflow: hidden;
-    border-radius: 0;
+    width: 100%; position: relative; background: var(--bg-surface); overflow: hidden; border-radius: 0;
   }
 
   .album-cover img {
     width: 100%; height: 100%; object-fit: cover;
     transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), filter 0.4s ease;
-    filter: grayscale(10%);
-    image-rendering: -webkit-optimize-contrast;
+    filter: grayscale(10%); image-rendering: -webkit-optimize-contrast;
   }
   
   .album-card:hover .album-cover img { transform: scale(1.03); filter: grayscale(0%); }
@@ -257,50 +205,31 @@ const albumCards = uniqueAlbums.map(name => {
   .album-card:hover .album-overlay { opacity: 1; }
 
   .arrow { 
-    color: white; font-family: var(--font-mono); 
-    font-size: 0.9rem; 
-    border: 1px solid white;
-    padding: 8px 16px; border-radius: 0;
+    color: white; font-family: var(--font-mono); font-size: 0.9rem; 
+    border: 1px solid white; padding: 8px 16px; border-radius: 0;
     text-transform: uppercase; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
   }
 
   .album-meta {
-    display: flex;
-    flex-direction: column; gap: 0.25rem;
+    display: flex; flex-direction: column; gap: 0.25rem;
     border-left: 2px solid transparent; padding-left: 0;
     transition: all 0.3s ease;
   }
-  .album-card:hover .album-meta {
-    border-left-color: var(--brand-secondary); padding-left: 10px;
-  }
+  .album-card:hover .album-meta { border-left-color: var(--brand-secondary); padding-left: 10px; }
   
   .album-meta h3 { 
-    font-family: var(--font-sans); 
-    font-weight: 900;
-    font-size: 1.5rem; 
-    margin: 0; 
-    color: var(--text-main);
-    text-transform: uppercase; 
-    letter-spacing: 0.05em;
+    font-family: var(--font-sans); font-weight: 900; font-size: 1.5rem; 
+    margin: 0; color: var(--text-main); text-transform: uppercase; letter-spacing: 0.05em;
   }
   
-  .album-meta .mono { 
-    font-family: var(--font-mono); 
-    font-size: 0.85rem; 
-    color: var(--text-muted); 
-  }
+  .album-meta .mono { font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-muted); }
 
   /* --- STREAM MASONRY --- */
   .photo-grid {
-    max-width: 1400px; margin: 0 auto;
-    padding: 0 2vw;
+    max-width: 1400px; margin: 0 auto; padding: 0 2vw;
     column-count: 3; column-gap: 4px;
   }
   .masonry-item { break-inside: avoid; margin-bottom: 4px; }
-
-  @media (max-width: 600px) {
-    .photo-grid { column-count: 2; }
-  }
-  
+  @media (max-width: 600px) { .photo-grid { column-count: 2; } }
   .photo-grid img { image-rendering: -webkit-optimize-contrast; }
 </style>

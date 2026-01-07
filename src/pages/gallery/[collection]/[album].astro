@@ -21,6 +21,7 @@ export async function getStaticPaths() {
   const allPhotos = (photosData.photos || []) as Photo[];
   const albumPhotos = allPhotos.filter(p => p.album !== null);
   
+  // Explicitly type the paths array to satisfy TS
   const paths: { params: { collection: string; album: string }; props: { photos: Photo[] } }[] = [];
   const seen = new Set<string>();
   
@@ -45,18 +46,38 @@ export async function getStaticPaths() {
 const { collection, album } = Astro.params;
 const { photos } = Astro.props;
 
-// --- CONFIG: Name Mapping ---
-const collectionNames = {
+// --- CONFIG: Collection Names ---
+const collectionNames: Record<string, string> = {
   street: "Street",
   cities: "Cities",
   portrait: "Portraits",
   uncategorized: "Archive"
 };
 
-const collectionKey = collection as keyof typeof collectionNames;
-const parentTitle = collectionNames[collectionKey] || collection.charAt(0).toUpperCase() + collection.slice(1);
+// --- CONFIG: Album Descriptions ---
+// FIX: Added ': Record<string, string>' so TS allows using any string to look up values
+const albumDescriptions: Record<string, string> = {
+  "boston": "Old brick meeting new glass. Walking the irregular streets where history overlaps with the morning commute.",
+  "chicago": "The grid and the river. A study in structure, cold wind, and the way steel frames the sky.",
+  "nyc": "Verticality and compression. The light hits differently when it has to travel down forty stories to reach the pavement.",
+  "seattle": "Rain shadows and ferries. A city that exists in the gray space between the mountains and the sound.",
+  "sf": "Fog lines and steep gradients. A collection of moments from the bay.",
+  "vancouver bc": "Glass towers on the edge of the wilderness. Where the Pacific meets the pavement.",
+  "los angeles": "Sprawl and golden hour. Finding the moments of stillness in the endless motion of the freeway city.",
+  "east lansing": "Quiet spaces and campus lines. Observations from the places where things move a little slower."
+};
 
-const displayTitle = album ? album.charAt(0).toUpperCase() + album.slice(1) : 'Album';
+// Cast collection to string for safety, though TS knows it's a string
+const collectionKey = (collection || "").toLowerCase();
+const parentTitle = collectionNames[collectionKey] || collection?.charAt(0).toUpperCase() + collection?.slice(1) || "Collection";
+
+// Normalize album to lowercase for lookup
+const albumKey = (album || "").toLowerCase();
+
+// Get the title and description safely
+const displayTitle = album ? album : 'Album'; 
+const displayDesc = albumDescriptions[albumKey] || `Selected frames from ${displayTitle}.`; 
+
 const coverImage = photos.length > 0 ? photos[0].src : undefined;
 ---
 
@@ -66,7 +87,11 @@ const coverImage = photos.length > 0 ? photos[0].src : undefined;
     <div class="header-content">
       <a href={`/gallery/${collection}`} class="back-link">← {parentTitle}</a>
       <h1 class="collection-title">{displayTitle}</h1>
+      
       <div class="line-break"></div>
+      
+      <p class="album-desc">{displayDesc}</p>
+      
       <p class="collection-count">{photos.length} Frames</p>
     </div>
   </header>
@@ -88,7 +113,6 @@ const coverImage = photos.length > 0 ? photos[0].src : undefined;
   .collection-header {
     margin: 3rem 0 4rem 0;
     display: flex;
-    /* LEFT ALIGN UPDATE */
     justify-content: flex-start;
     max-width: 1400px;
     margin-left: auto; margin-right: auto;
@@ -98,10 +122,10 @@ const coverImage = photos.length > 0 ? photos[0].src : undefined;
   .header-content {
     display: flex;
     flex-direction: column;
-    /* LEFT ALIGN UPDATE */
     align-items: flex-start;
     text-align: left;
-    gap: 0.5rem;
+    gap: 0.75rem;
+    max-width: 650px;
   }
 
   .back-link {
@@ -131,8 +155,15 @@ const coverImage = photos.length > 0 ? photos[0].src : undefined;
     background: var(--brand-secondary);
     margin: 0.5rem 0;
     opacity: 0.6;
-    /* LEFT ALIGN UPDATE */
     align-self: flex-start;
+  }
+
+  .album-desc {
+    font-family: var(--font-sans);
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+    margin: 0.5rem 0 0 0;
   }
 
   .collection-count {
@@ -141,6 +172,7 @@ const coverImage = photos.length > 0 ? photos[0].src : undefined;
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.1em;
+    margin-top: 0.5rem;
   }
 
   /* --- MASONRY GRID --- */
@@ -155,9 +187,6 @@ const coverImage = photos.length > 0 ? photos[0].src : undefined;
   .masonry-item {
     break-inside: avoid;
     margin-bottom: 4px;
-    
-    /* --- FIX: GHOST BOX GLITCH --- */
-    /* Forces hardware acceleration to prevent painting errors */
     backface-visibility: hidden;
     transform: translateZ(0);
     will-change: transform;

@@ -7,7 +7,6 @@ import 'photoswipe/style.css';
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 
-
 interface Props {
   title: string;
   description?: string;
@@ -51,7 +50,6 @@ const socialImageURL = new URL(image, Astro.site).href;
     <script is:inline>
         const setTheme = () => {
           const stored = localStorage.getItem("theme");
-          // CHANGE: Default to "dark" if nothing is stored
           const theme = stored || "dark"; 
           document.documentElement.setAttribute("data-theme", theme);
         };
@@ -61,7 +59,6 @@ const socialImageURL = new URL(image, Astro.site).href;
   </head>
   <body>
     <a href="#main-gallery" class="skip-link">Skip to content</a>
-
 
     <Header />
       
@@ -75,7 +72,8 @@ const socialImageURL = new URL(image, Astro.site).href;
       import PhotoSwipeLightbox from 'photoswipe/lightbox';
       import PhotoSwipe from 'photoswipe';
 
-      let lightbox;
+      // FIX: added ': any' to satisfy TypeScript
+      let lightbox: any;
 
       function initLightbox() {
         lightbox = new PhotoSwipeLightbox({
@@ -84,7 +82,6 @@ const socialImageURL = new URL(image, Astro.site).href;
           pswpModule: PhotoSwipe,
           
           /* 1. OPACITY SETTINGS */
-          /* We set this to 1.0 (or nearly 1) so the colors defined in CSS are solid */
           bgOpacity: 0.95, 
           showHideOpacity: true,
           
@@ -92,12 +89,13 @@ const socialImageURL = new URL(image, Astro.site).href;
           wheelToZoom: true,
           preload: [1, 3],
 
-          paddingFn: (viewportSize) => {
+          // FIX: added ': any' to viewportSize
+          paddingFn: (viewportSize: any) => {
             return { top: 0, bottom: 0, left: 0, right: 0 }
           }
         });
 
-        /* 3. CAPTION LOGIC (The Scraper) */
+        /* 3. CAPTION LOGIC */
         lightbox.on('uiRegister', function() {
           lightbox.pswp.ui.registerElement({
             name: 'custom-caption',
@@ -105,7 +103,8 @@ const socialImageURL = new URL(image, Astro.site).href;
             isButton: false,
             appendTo: 'root',
             html: '',
-            onInit: (el, pswp) => {
+            // FIX: added ': any' to el and pswp
+            onInit: (el: any, pswp: any) => {
               lightbox.pswp.on('change', () => {
                 const currSlide = lightbox.pswp.currSlide;
                 if (currSlide && currSlide.data.element) {
@@ -120,6 +119,7 @@ const socialImageURL = new URL(image, Astro.site).href;
             }
           });
         });
+
         lightbox.init();
       }
 
@@ -137,15 +137,11 @@ const socialImageURL = new URL(image, Astro.site).href;
 <style>
   .global-wrapper {
     width: 100%;
-    /* We keep the width/centering logic here */
     max-width: 1600px; 
     margin: 0 auto;
-    
     position: relative;
-    z-index: 2; 
+    z-index: 2;
   }
-
-  /* @media (min-width: 768px) { .global-wrapper { padding: 0 40px; } } */
 
   /* ================================================== */
   /* PRO STANDARD LIGHTBOX (ALWAYS DARK)              */
@@ -153,32 +149,45 @@ const socialImageURL = new URL(image, Astro.site).href;
   
   :global(.pswp__bg) {
     /* Deep Charcoal - Best for color perception & contrast */
-    background-color: #0e0e0e !important; 
-    opacity: 0.98 !important; /* Almost opaque to block out the UI */
+    background-color: #0e0e0e !important;
+    opacity: 0.98 !important;
     transition: opacity 0.3s ease;
   }
 
   /* ================================================== */
-  /* CAPTION STYLES                                   */
+  /* CAPTION CONTAINER                                */
   /* ================================================== */
   :global(.pswp__custom-caption) {
     position: absolute;
     bottom: 0; left: 0; width: 100%;
-    /* Subtle gradient to make white text readable on any photo */
+    /* Subtle gradient so text is readable on any photo */
     background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
     padding: 4rem 1.5rem 2rem 1.5rem;
     text-align: center;
-    color: rgba(255, 255, 255, 0.95); /* Bright white text */
     pointer-events: none;
     z-index: 2000;
   }
   
+  /* --- NEW: The Narrative Caption (White, Readable) --- */
+  :global(.pswp__custom-caption p.lightbox-caption-body) {
+    font-family: var(--font-sans);
+    font-size: 1.1rem;
+    color: #ffffff;
+    margin: 0 auto 0.5rem auto;
+    max-width: 600px;
+    line-height: 1.5;
+    font-weight: 400;
+  }
+
+  /* --- EXISTING: The Tech Specs (Gray, Muted) --- */
+  :global(.pswp__custom-caption small.lightbox-caption-text),
   :global(.pswp__custom-caption small) {
     font-family: var(--font-mono);
-    font-size: 0.9rem;
-    color: rgba(255, 255, 255, 0.85); /* Slightly muted EXIF data */
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.6);
     display: block;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
     text-shadow: 0 1px 3px rgba(0,0,0,0.9);
   }
 </style>

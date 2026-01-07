@@ -6,6 +6,7 @@ interface Props {
     full: string;
     alt: string;
     exif?: string;
+    caption?: string; /* <--- NEW: Optional Caption */
     width: number;
     height: number;
     id: string;
@@ -41,13 +42,21 @@ const webpSrc = photo.src.replace(/\.jpe?g$/i, '.webp');
   </a>
   
   <div class="card-overlay">
+    {/* Visual EXIF on hover (Grid View) */}
     {photo.exif && <span class="overlay-exif">{photo.exif}</span>}
     
+    {/* --- LIGHTBOX DATA SOURCE --- */}
+    {/* This is hidden on the grid but scraped by the Lightbox script */}
     <div class="hidden-caption" style="display: none;">
+      
+      {/* 1. The Story (Only renders if 'caption' exists in JSON) */}
+      {photo.caption && (
+        <p class="lightbox-caption-body">{photo.caption}</p>
+      )}
+
+      {/* 2. The Tech Specs (Always renders if 'exif' exists) */}
       {photo.exif && (
-        <small class="lightbox-caption-text">
-          {photo.exif}
-        </small>
+        <small class="lightbox-caption-text">{photo.exif}</small>
       )}
     </div>
   </div>
@@ -70,7 +79,7 @@ const webpSrc = photo.src.replace(/\.jpe?g$/i, '.webp');
   /* OPTIONAL: Sharp Mode */
   .photo-card.is-sharp {
     border-radius: 0;
-    margin-bottom: 0; 
+    margin-bottom: 0;
   }
 
   .pswp-link {
@@ -83,7 +92,7 @@ const webpSrc = photo.src.replace(/\.jpe?g$/i, '.webp');
   .photo-card img {
     display: block;
     width: 100%;
-    height: auto; /* This prevents the 'overblown' full-res images */
+    height: auto;
     transition: opacity 0.3s ease;
   }
   
@@ -95,7 +104,7 @@ const webpSrc = photo.src.replace(/\.jpe?g$/i, '.webp');
     bottom: 0; left: 0; right: 0;
     padding: 20px 12px 12px;
     background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
-    opacity: 0; 
+    opacity: 0;
     transition: opacity 0.3s ease;
     pointer-events: none;
   }
@@ -107,11 +116,5 @@ const webpSrc = photo.src.replace(/\.jpe?g$/i, '.webp');
     font-size: clamp(0.85rem, 2.5vw, 1.1rem);
     color: rgba(255,255,255,0.95);
     letter-spacing: 0.05em;
-  }
-
-  .lightbox-caption-text {
-    font-family: var(--font-mono); 
-    font-size: clamp(0.9rem, 3vw, 1.4rem); 
-    opacity: 0.8;
   }
 </style>

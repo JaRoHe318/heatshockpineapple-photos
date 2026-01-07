@@ -8,6 +8,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "photos": "node scripts/generate-photos.mjs",
+    "clean": "node scripts/batman-maker.js",
+    "sync": "npm run photos && npm run clean",
     "astro": "astro"
   },
   "dependencies": {

@@ -5,23 +5,15 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import PhotoCard from "../../components/PhotoCard.astro";
 import photosData from "../../data/photos.json";
 
-// Server-side Interface
 interface Photo {
-  id: string;
-  src: string;
-  full: string;
-  alt: string;
-  collection: string;
-  album: string | null;
-  exif?: string;
-  width: number;
-  height: number;
+  id: string; src: string; full: string; alt: string;
+  collection: string; album: string | null; exif?: string;
+  width: number; height: number;
 }
 
 const allPhotos = (photosData.photos || []) as Photo[];
 
-// --- 1. PREPARE COLLECTIONS ---
-// We keep 'uncategorized' (Archive) out of the main pillars
+// --- PREPARE COLLECTIONS ---
 const customOrder = ['Portrait', 'Street', 'Cities'];
 const uniqueCollections = [...new Set(allPhotos.map(p => p.collection))]
   .filter(c => c !== 'uncategorized') 
@@ -43,10 +35,8 @@ const collections = uniqueCollections.map(name => {
   };
 });
 
-// --- 2. PREPARE STREAM ---
-const randomStream = allPhotos
-  .sort(() => 0.5 - Math.random())
-  .slice(0, 15);
+// --- PREPARE STREAM ---
+const randomStream = allPhotos.sort(() => 0.5 - Math.random()).slice(0, 15);
 ---
 
 <BaseLayout title="Gallery" description="Browse gallery and featured shots.">
@@ -59,17 +49,12 @@ const randomStream = allPhotos
     </div>
   </header>
 
-  {/* Main Pillars Navigation */}
   <section class="collections-nav">
     <div class="nav-grid">
       {collections.map((col) => (
         <a href={`/gallery/${col.name}`} class="nav-card group">
           <div class="nav-img-box">
-            <img 
-              src={col.cover} 
-              alt={col.name} 
-              loading="lazy" 
-            />
+            <img src={col.cover} alt={col.name} loading="lazy" />
             <div class="nav-overlay">
               <span class="arrow">View Series &rarr;</span>
             </div>
@@ -83,7 +68,6 @@ const randomStream = allPhotos
     </div>
   </section>
 
-  {/* Stream Toolbar */}
   <div class="stream-toolbar">
     <span class="divider-text">Featured Stream</span>
     <div class="divider-line"></div>
@@ -92,12 +76,7 @@ const randomStream = allPhotos
     </button>
   </div>
 
-  {/* The Stream Grid */}
-  <section 
-    class="photo-grid" 
-    id="stream-grid"
-    data-all-photos={JSON.stringify(allPhotos)} 
-  >
+  <section class="photo-grid" id="stream-grid" data-all-photos={JSON.stringify(allPhotos)}>
     {randomStream.map((photo) => (
       <div class="masonry-item">
         <PhotoCard photo={photo} sharp={true} />
@@ -105,7 +84,6 @@ const randomStream = allPhotos
     ))}
   </section>
 
-  {/* Archive Link at the bottom */}
   <div class="archive-link-wrapper">
     <a href="/gallery/uncategorized" class="archive-link">View Full Archive &rarr;</a>
   </div>
@@ -116,19 +94,7 @@ const randomStream = allPhotos
 
 <script>
   // CLIENT SIDE SHUFFLE LOGIC
-  
-  // Interface for TS in script
-  interface Photo {
-    id: string;
-    src: string;
-    full: string;
-    alt: string;
-    collection: string;
-    album: string | null;
-    exif?: string;
-    width: number;
-    height: number;
-  }
+  interface Photo { id: string; src: string; full: string; alt: string; collection: string; album: string | null; exif?: string; width: number; height: number; }
 
   document.addEventListener('astro:page-load', () => {
     const btn = document.getElementById('shuffle-btn');
@@ -139,61 +105,29 @@ const randomStream = allPhotos
 
       btn.addEventListener('click', () => {
         const originalText = btn.innerHTML;
-        btn.innerHTML = "↻"; 
-        btn.style.opacity = "0.7";
-        btn.style.pointerEvents = "none";
-        
-        grid.style.opacity = "0.5";
-        grid.style.transition = "opacity 0.2s";
+        btn.innerHTML = "↻"; btn.style.opacity = "0.7"; btn.style.pointerEvents = "none";
+        grid.style.opacity = "0.5"; grid.style.transition = "opacity 0.2s";
 
         setTimeout(() => {
-          const newBatch = allPhotos
-            .sort(() => 0.5 - Math.random())
-            .slice(0, 15);
-
+          const newBatch = allPhotos.sort(() => 0.5 - Math.random()).slice(0, 15);
           grid.innerHTML = newBatch.map((photo: Photo) => {
             const webpSrc = photo.src.replace(/\.jpe?g$/i, '.webp');
-            
             return `
             <div class="masonry-item">
               <figure class="photo-card is-sharp">
-                <a 
-                  href="${photo.full}" 
-                  data-pswp-width="${photo.width}" 
-                  data-pswp-height="${photo.height}" 
-                  class="pswp-link" 
-                  aria-label="View full size: ${photo.alt || ''}"
-                  target="_blank"
-                >
+                <a href="${photo.full}" data-pswp-width="${photo.width}" data-pswp-height="${photo.height}" class="pswp-link" target="_blank">
                   <picture>
                     <source srcset="${webpSrc}" type="image/webp" />
-                    <img 
-                      src="${photo.src}" 
-                      alt="${photo.alt || ''}" 
-                      width="${photo.width}"
-                      height="${photo.height}"
-                      loading="lazy" 
-                      decoding="async"
-                      style="aspect-ratio: ${photo.width} / ${photo.height};" 
-                    />
+                    <img src="${photo.src}" alt="${photo.alt || ''}" width="${photo.width}" height="${photo.height}" loading="lazy" decoding="async" style="aspect-ratio: ${photo.width} / ${photo.height};" />
                   </picture>
                 </a>
-                
                 <div class="card-overlay">
                   ${photo.exif ? `<span class="overlay-exif">${photo.exif}</span>` : ''}
-                  <div class="hidden-caption" style="display: none;">
-                    ${photo.exif ? `<small class="lightbox-caption-text">${photo.exif}</small>` : ''}
-                  </div>
                 </div>
               </figure>
-            </div>
-            `;
+            </div>`;
           }).join('');
-
-          grid.style.opacity = "1";
-          btn.innerHTML = originalText;
-          btn.style.opacity = "1";
-          btn.style.pointerEvents = "auto";
+          grid.style.opacity = "1"; btn.innerHTML = originalText; btn.style.opacity = "1"; btn.style.pointerEvents = "auto";
         }, 300);
       });
     }
@@ -203,111 +137,80 @@ const randomStream = allPhotos
 <style>
   /* --- PAGE HEADER --- */
   .gallery-header {
-    margin-top: 3rem;
-    margin-bottom: 4rem;
+    margin-top: 3rem; margin-bottom: 4rem;
     display: flex;
-    justify-content: center;
+    /* LEFT ALIGN */
+    justify-content: flex-start;
+    max-width: 1400px; margin-left: auto; margin-right: auto;
+    padding: 0 2vw;
   }
   
   .header-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    display: flex; flex-direction: column;
+    /* LEFT ALIGN */
+    align-items: flex-start;
     gap: 0.5rem;
-    border-bottom: 1px solid transparent; 
   }
 
   .page-title {
-    font-family: var(--font-sans);
-    font-weight: 900;
+    font-family: var(--font-sans); font-weight: 900;
     font-size: clamp(3rem, 5vw, 4rem); 
-    line-height: 1;
-    margin: 0;
-    color: var(--text-main);
-    text-transform: uppercase;
+    line-height: 1; margin: 0;
+    color: var(--text-main); text-transform: uppercase;
   }
   
   .line-break {
-    width: 40px;
-    height: 2px;
-    background: var(--brand-secondary);
-    margin: 0.5rem 0;
-    opacity: 0.6;
+    width: 40px; height: 2px; background: var(--brand-secondary);
+    margin: 0.5rem 0; opacity: 0.6;
+    /* LEFT ALIGN */
+    align-self: flex-start;
   }
 
   .page-desc {
-    font-family: var(--font-mono); 
-    color: var(--text-muted);
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+    font-family: var(--font-mono); color: var(--text-muted);
+    font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.1em;
     margin: 0;
   }
 
   /* --- PILLAR NAVIGATION --- */
   .collections-nav { 
-    margin-bottom: 5rem; 
-    max-width: 1400px;
-    margin-left: auto;
-    margin-right: auto;
-    padding: 0 2vw;
+    margin-bottom: 5rem; max-width: 1400px;
+    margin-left: auto; margin-right: auto; padding: 0 2vw;
   }
 
   .nav-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem; 
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; 
   }
 
   .nav-card {
-    text-decoration: none; 
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    cursor: pointer;
+    text-decoration: none; display: flex; flex-direction: column; gap: 0.75rem; cursor: pointer;
   }
 
   .nav-img-box {
-    /* UPDATED: Changed from 2/3 to 1/1 (Square) */
+    /* SQUARE RATIO */
     aspect-ratio: 1/1;
-    width: 100%;
-    overflow: hidden;
-    position: relative;
-    background: var(--bg-surface);
+    width: 100%; overflow: hidden; position: relative; background: var(--bg-surface);
   }
 
   .nav-img-box img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+    width: 100%; height: 100%; object-fit: cover;
     transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), filter 0.4s ease;
-    filter: grayscale(10%);
-    image-rendering: -webkit-optimize-contrast;
+    filter: grayscale(10%); image-rendering: -webkit-optimize-contrast;
   }
 
-  .nav-card:hover .nav-img-box img { 
-    transform: scale(1.03); 
-    filter: grayscale(0%);
-  }
+  .nav-card:hover .nav-img-box img { transform: scale(1.03); filter: grayscale(0%); }
 
   .nav-overlay {
-    position: absolute; inset: 0;
-    background: rgba(0,0,0,0.3);
+    position: absolute; inset: 0; background: rgba(0,0,0,0.3);
     display: flex; align-items: center; justify-content: center;
     opacity: 0; transition: opacity 0.3s ease;
   }
   .nav-card:hover .nav-overlay { opacity: 1; }
 
   .arrow { 
-    color: white;
-    font-family: var(--font-mono);
-    font-size: 0.9rem; 
-    border: 1px solid white;
-    padding: 8px 16px; 
-    border-radius: 0; 
-    text-transform: uppercase;
-    background: rgba(0,0,0,0.5);
-    backdrop-filter: blur(4px);
+    color: white; font-family: var(--font-mono); font-size: 0.9rem; 
+    border: 1px solid white; padding: 8px 16px; border-radius: 0; 
+    text-transform: uppercase; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
   }
 
   .nav-meta {
@@ -320,89 +223,54 @@ const randomStream = allPhotos
   }
 
   .nav-title {
-    font-family: var(--font-sans); 
-    font-weight: 900;
-    font-size: 1.5rem; 
-    margin: 0;
-    color: var(--text-main); 
-    text-transform: uppercase; 
-    letter-spacing: 0.05em;
+    font-family: var(--font-sans); font-weight: 900;
+    font-size: 1.5rem; margin: 0; color: var(--text-main); 
+    text-transform: uppercase; letter-spacing: 0.05em;
   }
   
-  .nav-count { 
-    color: var(--text-muted); 
-    font-size: 0.85rem; 
-  }
+  .nav-count { color: var(--text-muted); font-size: 0.85rem; }
 
   /* --- STREAM TOOLBAR --- */
   .stream-toolbar {
-    display: flex;
-    align-items: center; gap: 1.5rem; margin: 0 auto 2rem;
+    display: flex; align-items: center; gap: 1.5rem; margin: 0 auto 2rem;
     max-width: 1400px; padding: 0 2vw;
+    /* Already left aligned by flex default, but ensuring padding matches grid */
   }
   .divider-text {
-    font-family: var(--font-mono); 
-    font-size: 0.85rem;
+    font-family: var(--font-mono); font-size: 0.85rem;
     text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-muted);
     white-space: nowrap;
   }
   .divider-line { flex: 1; height: 1px; background: var(--border); opacity: 0.5; }
   
   .btn-shuffle {
-    background: transparent; border: 1px solid var(--border); 
-    padding: 8px 18px;
-    border-radius: 0; font-family: var(--font-mono);
-    font-size: 0.85rem;
+    background: transparent; border: 1px solid var(--border); padding: 8px 18px;
+    border-radius: 0; font-family: var(--font-mono); font-size: 0.85rem;
     color: var(--text-muted); cursor: pointer; transition: all 0.2s ease;
     text-transform: uppercase;
   }
-  .btn-shuffle:hover {
-    border-color: var(--text-main); color: var(--text-main); background: var(--bg-surface);
-  }
+  .btn-shuffle:hover { border-color: var(--text-main); color: var(--text-main); background: var(--bg-surface); }
 
   /* --- GRID --- */
   .photo-grid {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 2vw;
-    column-count: 3;
-    column-gap: 4px; 
+    max-width: 1400px; margin: 0 auto; padding: 0 2vw;
+    column-count: 3; column-gap: 4px; 
   }
-
-  .masonry-item {
-    break-inside: avoid;
-    margin-bottom: 4px;
-  }
+  .masonry-item { break-inside: avoid; margin-bottom: 4px; }
 
   /* --- ARCHIVE LINK --- */
-  .archive-link-wrapper {
-    text-align: center;
-    margin-top: 3rem;
-  }
-  
+  .archive-link-wrapper { text-align: center; margin-top: 3rem; }
   .archive-link {
-    font-family: var(--font-mono);
-    font-size: 0.9rem;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    text-decoration: none;
-    padding-bottom: 2px;
-    border-bottom: 1px solid transparent;
-    transition: all 0.2s ease;
+    font-family: var(--font-mono); font-size: 0.9rem; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.1em; text-decoration: none;
+    padding-bottom: 2px; border-bottom: 1px solid transparent; transition: all 0.2s ease;
   }
-  
-  .archive-link:hover {
-    color: var(--text-main);
-    border-bottom-color: var(--brand-secondary);
-  }
+  .archive-link:hover { color: var(--text-main); border-bottom-color: var(--brand-secondary); }
 
-  /* --- RESPONSIVE --- */
   @media (max-width: 900px) {
     .nav-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
     .photo-grid { column-count: 2; }
   }
-
   @media (max-width: 600px) {
     .gallery-header { margin-top: 1rem; margin-bottom: 2rem; }
     .page-title { font-size: 2.5rem; }
@@ -412,6 +280,5 @@ const randomStream = allPhotos
   }
 
   .spacer-bottom { height: 6rem; }
-  
   .photo-grid img { image-rendering: -webkit-optimize-contrast; }
 </style>

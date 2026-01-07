@@ -1,20 +1,39 @@
 ---
 /* src/pages/index.astro */
 import BaseLayout from "../layouts/BaseLayout.astro";
+import PhotoCard from "../components/PhotoCard.astro"; 
 import photosData from "../data/photos.json";
 
 // 1. HERO DATA
 const allPhotos = photosData.photos || [];
-const heroCandidates = JSON.stringify(allPhotos.map(p => ({ 
+
+const validHeroPhotos = allPhotos.filter(p => p.full && p.full.length > 0);
+const heroCandidates = JSON.stringify(validHeroPhotos.map(p => ({ 
   full: p.full, 
   alt: p.alt || "Featured photography shot", 
   exif: p.exif || "Unknown Camera" 
 })));
 
-// 2. MOSAIC DATA
-// Shuffle and pick 8 photos
-const shuffled = [...allPhotos].sort(() => 0.5 - Math.random());
-const mosaicPhotos = shuffled.slice(0, 8); 
+// 2. SELECTED WORKS
+const selectedIds = [
+  "Cities__NYC__IMG_7173",
+  "Cities__Seattle__IMG_0522",
+  "Cities__SF__IMG_4509",
+  "Cities__Chicago__20250711_123627_M6_5292",
+  "Street__IMG_0463",
+  "Portrait__IMG_2914",
+  "Street__20250718_084255_M6_5901",
+  "Cities__Boston__IMG_7839"
+];
+
+// 3. BUILD THE LIST
+const mosaicPhotos = [];
+for (const id of selectedIds) {
+  const match = allPhotos.find(p => p.id === id);
+  if (match && match.src) {
+    mosaicPhotos.push(match);
+  }
+}
 ---
 
 <BaseLayout title="Home" description="The photography portfolio of J.R.H.">
@@ -22,12 +41,10 @@ const mosaicPhotos = shuffled.slice(0, 8);
   <section class="hero-section">
     <div class="hero-content">
       <div class="text-group">
-        
         <h1 class="hero-title">
           <span class="line-text">HEATSHOCK</span> 
           <span class="line-text text-gold">PHOTOGRAPHY</span>
         </h1>
-        
         <p class="hero-text">
           Pictures from a life spent between cities.
         </p>
@@ -63,11 +80,12 @@ const mosaicPhotos = shuffled.slice(0, 8);
       <span class="mono-label">Selected Works // {new Date().getFullYear()}</span>
     </div>
 
-    <div class="editorial-mosaic">
-      {mosaicPhotos.map((photo, index) => (
-        <div class={`mosaic-item item-${index}`}>
-          <img src={photo.full} alt={photo.alt || "Gallery image"} loading="lazy" />
-          <div class="overlay"></div>
+    <div class="photo-grid">
+      {mosaicPhotos.map((photo) => (
+        /* REMOVED: The extra wrapper and error script */
+        /* ADDED: inline-block to prevent column splitting bugs */
+        <div class="masonry-item" style="display: inline-block; width: 100%;">
+          <PhotoCard photo={photo} sharp={true} /> 
         </div>
       ))}
     </div>
@@ -82,13 +100,22 @@ const mosaicPhotos = shuffled.slice(0, 8);
     const dataEl = document.getElementById('hero-data');
     const img = document.getElementById('hero-img');
     const exif = document.getElementById('hero-exif');
+    
     if (!dataEl || !img || !exif) return;
 
-    const candidates = JSON.parse(dataEl.textContent);
+    let candidates = [];
+    try {
+      candidates = JSON.parse(dataEl.textContent);
+    } catch (e) {
+      console.error("JSON Parse Error", e);
+      return;
+    }
+
+    if (!candidates || candidates.length === 0) return;
+
     const last = sessionStorage.getItem("lastHero");
     let pick = candidates[Math.floor(Math.random() * candidates.length)];
     
-    // Retry logic
     for (let i = 0; i < 5 && pick.full === last; i++) {
       pick = candidates[Math.floor(Math.random() * candidates.length)];
     }
@@ -101,25 +128,25 @@ const mosaicPhotos = shuffled.slice(0, 8);
     if (img.complete) { img.classList.remove('is-loading'); } 
     else { img.onload = () => img.classList.remove('is-loading'); }
   }
+  
   initHero();
   document.addEventListener('astro:after-swap', initHero);
 </script>
 
 <style>
-  /* === HERO STYLES === */
+  /* === HERO STYLES (Unchanged) === */
   .hero-section {
     min-height: 85svh; 
-    display: flex; flex-direction: column; align-items: center;
+    display: flex; flex-direction: column;
+    align-items: center;
     padding: 1rem 1.5rem 3rem 1.5rem; gap: 2rem;
-    overflow-x: hidden; 
-    width: 100%;
+    overflow-x: hidden; width: 100%;
   }
   .hero-content { display: contents; }
   .text-group { order: 1; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.75rem; width: 100%; margin-bottom: 0.5rem; }
   .hero-visual { order: 2; width: 100%; display: flex; justify-content: center; position: relative; z-index: 1; margin-bottom: 1rem; }
   .cta-wrapper { order: 3; display: flex; flex-direction: column; gap: 1rem; width: 100%; align-items: center; }
 
-  /* UPDATED BREAKPOINT: 700px (From your last version) */
   @media (min-width: 700px) {
     .hero-section { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; padding: 4rem 5vw; align-items: center; }
     .hero-content { display: flex; flex-direction: column; align-items: flex-start; text-align: left; order: unset; }
@@ -128,133 +155,70 @@ const mosaicPhotos = shuffled.slice(0, 8);
     .hero-visual { order: unset; margin-bottom: 0; }
   }
 
-  /* === UPDATED TITLE: Sans, Bold, Block === */
   .hero-title { 
-    font-family: var(--font-sans); 
-    font-weight: 900; 
-    font-size: clamp(2.5rem, 5vw, 5.5rem); 
-    line-height: 0.95; 
-    margin: 0;
-    
-    display: flex;
-    flex-direction: column;
-    align-items: center; 
+    font-family: var(--font-sans); font-weight: 900; 
+    font-size: clamp(2.5rem, 5vw, 5.5rem); line-height: 0.95; margin: 0;
+    display: flex; flex-direction: column; align-items: center;
   }
-
   @media (min-width: 700px) { .hero-title { align-items: flex-start; } }
   
-  .line-text {
-    display: block;
-    color: var(--text-main);
-    letter-spacing: -0.02em; /* Normal tight spacing */
-  }
-
+  .line-text { display: block; color: var(--text-main); letter-spacing: -0.02em; }
   .text-gold { color: var(--brand-secondary); font-weight: 900; }
-  
   .hero-text { font-family: var(--font-sans); font-size: 1.25rem; color: var(--text-muted); }
 
   .btn-primary { 
     background-color: var(--text-main); color: var(--bg-paper); padding: 16px 36px; 
     border-radius: 50px; text-decoration: none; font-family: var(--font-sans); 
-    box-shadow: 0 4px 15px rgba(0,0,0, 0.1);
-    font-size: 1.05rem; 
+    box-shadow: 0 4px 15px rgba(0,0,0, 0.1); font-size: 1.05rem; 
   }
   .btn-text { color: var(--text-main); text-decoration: none; font-family: var(--font-sans); }
 
   /* === POLAROID STACK === */
-  .polaroid-stack { 
-    position: relative; 
-    width: 100%; 
-    max-width: 550px; 
-  }
+  .polaroid-stack { position: relative; width: 100%; max-width: 550px; }
 
   .hero-img {
-    width: 100%; 
-    height: auto; 
-    aspect-ratio: 4/5; 
-    object-fit: cover;
-    
+    width: 100%; height: auto; aspect-ratio: 4/5; object-fit: cover;
     border-radius: var(--radius);
     box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15);
     transform: rotate(2deg); will-change: transform, opacity; backface-visibility: hidden;
     transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease-in; 
-    opacity: 1; 
-    
-    max-height: 80vh; 
-    margin: 0 auto;
-    display: block;
+    opacity: 1; max-height: 80vh; margin: 0 auto; display: block;
   }
   .hero-img.is-loading { opacity: 0; }
   .hero-visual:hover .hero-img { transform: rotate(0deg) scale(1.02); }
 
   .meta-tag { 
     position: absolute; bottom: 25px; right: -15px; 
-    background: var(--bg-surface); border: 1px solid var(--border); 
-    padding: 10px 20px; 
-    display: flex; flex-direction: column; gap: 4px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-    border-radius: 2px; 
-    z-index: 2;
-    transform: rotate(-1.5deg); 
+    background: var(--bg-surface); border: 1px solid var(--border);
+    padding: 10px 20px; display: flex; flex-direction: column; gap: 4px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08); border-radius: 2px; z-index: 2;
+    transform: rotate(-1.5deg);
   }
-  .meta-label { 
-    font-family: var(--font-sans); 
-    /* BUMP UP: 0.8rem -> 0.875rem (14px) */
-    font-size: 0.875rem; 
-    color: var(--brand-secondary); 
-    text-transform: uppercase; font-weight: 800; letter-spacing: 0.1em;
-  }
-  .mono { 
-    font-family: var(--font-mono); 
-    /* BUMP UP: 0.95rem -> 1rem (16px) */
-    /* EXIF data is technical, so making it full base size helps readability */
-    font-size: 1rem; 
-    color: var(--text-main);
-  }
+  .meta-label { font-family: var(--font-sans); font-size: 0.875rem; color: var(--brand-secondary); text-transform: uppercase; font-weight: 800; letter-spacing: 0.1em; }
+  .mono { font-family: var(--font-mono); font-size: 1rem; color: var(--text-main); }
 
-  /* === MOSAIC === */
-  .mosaic-section {
-    padding: 0 2vw 6rem;
-    max-width: 1600px;
-    margin: 0 auto;
-    overflow: hidden; 
+  /* === GRID SECTION === */
+  .mosaic-section { 
+    padding: 0 2vw 6rem; 
+    max-width: 1600px; 
+    margin: 0 auto; 
   }
   
   .grid-header { 
-    display: flex; align-items: center; margin-bottom: 2rem; opacity: 0.9;
-    border-bottom: 1px solid var(--border); padding-bottom: 1rem;
+    display: flex; align-items: center; 
+    margin-bottom: 2rem; opacity: 0.9; 
+    border-bottom: 1px solid var(--border); 
+    padding-bottom: 1rem; 
   }
   
   .mono-label { 
-    font-family: var(--font-mono); 
-    /* BUMP UP: 0.9rem -> 1rem (16px) */
-    font-size: 1rem; 
+    font-family: var(--font-mono); font-size: 1rem; 
     color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; 
   }
 
-  .editorial-mosaic {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 4px; 
-    grid-auto-rows: 300px;
-  }
-
-  .mosaic-item { position: relative; overflow: hidden; border-radius: 0; }
-  .mosaic-item img {
-    width: 100%; height: 100%; object-fit: cover;
-    transition: transform 0.7s cubic-bezier(0.25, 1, 0.5, 1);
-    image-rendering: -webkit-optimize-contrast;
-  }
-  .mosaic-item:hover img { transform: scale(1.02); }
-
-  @media (min-width: 1024px) {
-    .editorial-mosaic {
-      grid-template-columns: repeat(4, 1fr);
-      grid-template-rows: repeat(2, 425px); 
-    }
-    .item-0 { grid-column: 1 / 3; grid-row: 1 / 3; } 
-    .item-1 { grid-column: 3 / 4; grid-row: 1 / 2; }
-    .item-2 { grid-column: 4 / 5; grid-row: 1 / 2; }
-    .item-3 { grid-column: 3 / 5; grid-row: 2 / 3; } 
+  /* --- FIX: Override PhotoCard background for Homepage only --- */
+  /* This ensures that if an image is missing/loading, you see NOTHING instead of a grey box */
+  .photo-grid :global(.photo-card) {
+    background: transparent !important;
   }
 </style>
