@@ -21,12 +21,10 @@ export async function getStaticPaths() {
   const allPhotos = (photosData.photos || []) as Photo[];
   const albumPhotos = allPhotos.filter(p => p.album !== null);
   
-  // Explicitly type the paths array
   const paths: { params: { collection: string; album: string }; props: { photos: Photo[] } }[] = [];
   const seen = new Set<string>();
   
   albumPhotos.forEach(p => {
-    // We know album is not null here due to the filter above, but TS might need assurance
     if (!p.album) return;
 
     const key = `${p.collection}/${p.album}`;
@@ -55,7 +53,6 @@ const collectionNames = {
   uncategorized: "Archive"
 };
 
-// FIX: Tell TS that 'collection' is definitely one of the keys of collectionNames
 const collectionKey = collection as keyof typeof collectionNames;
 const parentTitle = collectionNames[collectionKey] || collection.charAt(0).toUpperCase() + collection.slice(1);
 
@@ -91,20 +88,24 @@ const coverImage = photos.length > 0 ? photos[0].src : undefined;
   .collection-header {
     margin: 3rem 0 4rem 0;
     display: flex;
-    justify-content: center;
+    /* LEFT ALIGN UPDATE */
+    justify-content: flex-start;
+    max-width: 1400px;
+    margin-left: auto; margin-right: auto;
+    padding: 0 2vw;
   }
 
   .header-content {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    text-align: center;
+    /* LEFT ALIGN UPDATE */
+    align-items: flex-start;
+    text-align: left;
     gap: 0.5rem;
   }
 
   .back-link {
     font-family: var(--font-mono);
-    /* BUMP UP: 0.75rem -> 0.85rem */
     font-size: 0.85rem;
     color: var(--text-muted);
     text-transform: uppercase;
@@ -115,7 +116,6 @@ const coverImage = photos.length > 0 ? photos[0].src : undefined;
   .back-link:hover { color: var(--brand-secondary); }
   
   .collection-title {
-    /* UPDATED: Match Home Page */
     font-family: var(--font-sans);
     font-weight: 900;
     font-size: clamp(3rem, 5vw, 4rem);
@@ -131,11 +131,12 @@ const coverImage = photos.length > 0 ? photos[0].src : undefined;
     background: var(--brand-secondary);
     margin: 0.5rem 0;
     opacity: 0.6;
+    /* LEFT ALIGN UPDATE */
+    align-self: flex-start;
   }
 
   .collection-count {
     font-family: var(--font-mono);
-    /* BUMP UP: 0.8rem -> 0.9rem */
     font-size: 0.9rem;
     color: var(--text-muted);
     text-transform: uppercase;
@@ -154,6 +155,12 @@ const coverImage = photos.length > 0 ? photos[0].src : undefined;
   .masonry-item {
     break-inside: avoid;
     margin-bottom: 4px;
+    
+    /* --- FIX: GHOST BOX GLITCH --- */
+    /* Forces hardware acceleration to prevent painting errors */
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    will-change: transform;
   }
 
   @media (max-width: 600px) {
