@@ -1,4 +1,5 @@
 ---
+/* src/pages/404.astro */
 import BaseLayout from "../layouts/BaseLayout.astro";
 ---
 
@@ -25,7 +26,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   }
 
   .error-code {
-    font-family: var(--font-mono);
+    font-family: var(--font-mono); /* Keeping Mono here fits the "Error Code" vibe */
     font-size: clamp(5rem, 15vw, 12rem);
     line-height: 1;
     color: var(--text-muted);
@@ -41,10 +42,14 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   }
 
   .error-text {
-    font-family: var(--font-serif);
-    font-size: 1.5rem;
+    /* UPDATED: Match new site branding */
+    font-family: var(--font-sans);
+    font-weight: 900; 
+    text-transform: uppercase;
+    font-size: clamp(1.5rem, 4vw, 2.5rem);
     margin-bottom: 2rem;
     color: var(--text-main);
+    letter-spacing: -0.02em;
   }
 
   .btn-return {
@@ -54,7 +59,12 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     border-radius: 50px;
     text-decoration: none;
     color: var(--text-main);
-    font-size: 0.8rem;
+    
+    /* UPDATED: Better legibility */
+    font-family: var(--font-sans);
+    font-size: 0.9rem; 
+    font-weight: 500;
+    
     text-transform: uppercase;
     letter-spacing: 0.1em;
     transition: all 0.3s ease;
@@ -63,5 +73,6 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   .btn-return:hover {
     background: var(--text-main);
     color: var(--bg-paper);
+    border-color: var(--text-main);
   }
 </style>

@@ -1,17 +1,30 @@
 ---
 /* src/pages/gallery/index.astro */
+
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import PhotoCard from "../../components/PhotoCard.astro";
 import photosData from "../../data/photos.json";
 
-const allPhotos = photosData.photos || [];
+// Server-side Interface
+interface Photo {
+  id: string;
+  src: string;
+  full: string;
+  alt: string;
+  collection: string;
+  album: string | null;
+  exif?: string;
+  width: number;
+  height: number;
+}
+
+const allPhotos = (photosData.photos || []) as Photo[];
 
 // --- 1. PREPARE COLLECTIONS ---
-// Custom order for your pillars
-const customOrder = ['Portrait', 'Street', 'Transit'];
-
+// We keep 'uncategorized' (Archive) out of the main pillars
+const customOrder = ['Portrait', 'Street', 'Cities'];
 const uniqueCollections = [...new Set(allPhotos.map(p => p.collection))]
-  .filter(c => c !== 'uncategorized')
+  .filter(c => c !== 'uncategorized') 
   .sort((a, b) => {
     const indexA = customOrder.indexOf(a);
     const indexB = customOrder.indexOf(b);
@@ -46,12 +59,17 @@ const randomStream = allPhotos
     </div>
   </header>
 
+  {/* Main Pillars Navigation */}
   <section class="collections-nav">
     <div class="nav-grid">
       {collections.map((col) => (
         <a href={`/gallery/${col.name}`} class="nav-card group">
           <div class="nav-img-box">
-            <img src={col.cover} alt={col.name} loading="lazy" />
+            <img 
+              src={col.cover} 
+              alt={col.name} 
+              loading="lazy" 
+            />
             <div class="nav-overlay">
               <span class="arrow">View Series &rarr;</span>
             </div>
@@ -65,6 +83,7 @@ const randomStream = allPhotos
     </div>
   </section>
 
+  {/* Stream Toolbar */}
   <div class="stream-toolbar">
     <span class="divider-text">Featured Stream</span>
     <div class="divider-line"></div>
@@ -73,17 +92,23 @@ const randomStream = allPhotos
     </button>
   </div>
 
+  {/* The Stream Grid */}
   <section 
-    class="photo-grid sharp-grid" 
+    class="photo-grid" 
     id="stream-grid"
     data-all-photos={JSON.stringify(allPhotos)} 
   >
     {randomStream.map((photo) => (
       <div class="masonry-item">
-        <PhotoCard photo={photo} />
+        <PhotoCard photo={photo} sharp={true} />
       </div>
     ))}
   </section>
+
+  {/* Archive Link at the bottom */}
+  <div class="archive-link-wrapper">
+    <a href="/gallery/uncategorized" class="archive-link">View Full Archive &rarr;</a>
+  </div>
 
   <div class="spacer-bottom"></div>
 
@@ -91,12 +116,26 @@ const randomStream = allPhotos
 
 <script>
   // CLIENT SIDE SHUFFLE LOGIC
+  
+  // Interface for TS in script
+  interface Photo {
+    id: string;
+    src: string;
+    full: string;
+    alt: string;
+    collection: string;
+    album: string | null;
+    exif?: string;
+    width: number;
+    height: number;
+  }
+
   document.addEventListener('astro:page-load', () => {
     const btn = document.getElementById('shuffle-btn');
     const grid = document.getElementById('stream-grid');
 
     if (btn && grid) {
-      const allPhotos = JSON.parse(grid.dataset.allPhotos || '[]');
+      const allPhotos = JSON.parse(grid.dataset.allPhotos || '[]') as Photo[];
 
       btn.addEventListener('click', () => {
         const originalText = btn.innerHTML;
@@ -112,12 +151,12 @@ const randomStream = allPhotos
             .sort(() => 0.5 - Math.random())
             .slice(0, 15);
 
-          grid.innerHTML = newBatch.map(photo => {
-            const webpSrc = photo.src.replace(/\.jpg$/, '.webp');
-            // Re-creating the HTML for Masonry Items
+          grid.innerHTML = newBatch.map((photo: Photo) => {
+            const webpSrc = photo.src.replace(/\.jpe?g$/i, '.webp');
+            
             return `
             <div class="masonry-item">
-              <figure class="photo-card sharp-card">
+              <figure class="photo-card is-sharp">
                 <a 
                   href="${photo.full}" 
                   data-pswp-width="${photo.width}" 
@@ -135,10 +174,17 @@ const randomStream = allPhotos
                       height="${photo.height}"
                       loading="lazy" 
                       decoding="async"
+                      style="aspect-ratio: ${photo.width} / ${photo.height};" 
                     />
                   </picture>
                 </a>
-                <div class="card-overlay"></div>
+                
+                <div class="card-overlay">
+                  ${photo.exif ? `<span class="overlay-exif">${photo.exif}</span>` : ''}
+                  <div class="hidden-caption" style="display: none;">
+                    ${photo.exif ? `<small class="lightbox-caption-text">${photo.exif}</small>` : ''}
+                  </div>
+                </div>
               </figure>
             </div>
             `;
@@ -155,7 +201,7 @@ const randomStream = allPhotos
 </script>
 
 <style>
-  /* --- PAGE HEADER (Fixed "Floating" Issue) --- */
+  /* --- PAGE HEADER --- */
   .gallery-header {
     margin-top: 3rem;
     margin-bottom: 4rem;
@@ -167,23 +213,24 @@ const randomStream = allPhotos
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.5rem; /* Tighter gap between title and desc */
+    gap: 0.5rem;
     border-bottom: 1px solid transparent; 
   }
 
   .page-title {
-    font-family: var(--font-serif);
+    font-family: var(--font-sans);
+    font-weight: 900;
     font-size: clamp(3rem, 5vw, 4rem); 
     line-height: 1;
     margin: 0;
     color: var(--text-main);
+    text-transform: uppercase;
   }
   
-  /* Optional: A small accent line to anchor the text */
   .line-break {
     width: 40px;
     height: 2px;
-    background: var(--brand-secondary); /* Gold accent */
+    background: var(--brand-secondary);
     margin: 0.5rem 0;
     opacity: 0.6;
   }
@@ -191,7 +238,7 @@ const randomStream = allPhotos
   .page-desc {
     font-family: var(--font-mono); 
     color: var(--text-muted);
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     text-transform: uppercase;
     letter-spacing: 0.1em;
     margin: 0;
@@ -208,7 +255,7 @@ const randomStream = allPhotos
 
   .nav-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr); 
+    grid-template-columns: repeat(3, 1fr);
     gap: 1.5rem; 
   }
 
@@ -221,9 +268,9 @@ const randomStream = allPhotos
   }
 
   .nav-img-box {
-    aspect-ratio: 2/3; /* The Pillar Look */
+    /* UPDATED: Changed from 2/3 to 1/1 (Square) */
+    aspect-ratio: 1/1;
     width: 100%;
-    border-radius: 0; 
     overflow: hidden;
     position: relative;
     background: var(--bg-surface);
@@ -231,11 +278,11 @@ const randomStream = allPhotos
 
   .nav-img-box img {
     width: 100%;
-    height: 100%; 
+    height: 100%;
     object-fit: cover;
     transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), filter 0.4s ease;
     filter: grayscale(10%);
-    image-rendering: -webkit-optimize-contrast; 
+    image-rendering: -webkit-optimize-contrast;
   }
 
   .nav-card:hover .nav-img-box img { 
@@ -254,10 +301,10 @@ const randomStream = allPhotos
   .arrow { 
     color: white;
     font-family: var(--font-mono);
-    font-size: 0.8rem; 
-    border: 1px solid white; 
+    font-size: 0.9rem; 
+    border: 1px solid white;
     padding: 8px 16px; 
-    border-radius: 0; /* Sharp button */
+    border-radius: 0; 
     text-transform: uppercase;
     background: rgba(0,0,0,0.5);
     backdrop-filter: blur(4px);
@@ -273,25 +320,39 @@ const randomStream = allPhotos
   }
 
   .nav-title {
-    font-family: var(--font-serif); font-size: 1.5rem; margin: 0;
-    color: var(--text-main); font-weight: 500;
+    font-family: var(--font-sans); 
+    font-weight: 900;
+    font-size: 1.5rem; 
+    margin: 0;
+    color: var(--text-main); 
+    text-transform: uppercase; 
+    letter-spacing: 0.05em;
   }
-  .nav-count { color: var(--text-muted); font-size: 0.75rem; }
+  
+  .nav-count { 
+    color: var(--text-muted); 
+    font-size: 0.85rem; 
+  }
 
   /* --- STREAM TOOLBAR --- */
   .stream-toolbar {
-    display: flex; align-items: center; gap: 1.5rem; margin: 0 auto 2rem;
+    display: flex;
+    align-items: center; gap: 1.5rem; margin: 0 auto 2rem;
     max-width: 1400px; padding: 0 2vw;
   }
   .divider-text {
-    font-family: var(--font-mono); font-size: 0.75rem;
+    font-family: var(--font-mono); 
+    font-size: 0.85rem;
     text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-muted);
     white-space: nowrap;
   }
   .divider-line { flex: 1; height: 1px; background: var(--border); opacity: 0.5; }
+  
   .btn-shuffle {
-    background: transparent; border: 1px solid var(--border); padding: 6px 16px;
-    border-radius: 0; font-family: var(--font-mono); font-size: 0.7rem;
+    background: transparent; border: 1px solid var(--border); 
+    padding: 8px 18px;
+    border-radius: 0; font-family: var(--font-mono);
+    font-size: 0.85rem;
     color: var(--text-muted); cursor: pointer; transition: all 0.2s ease;
     text-transform: uppercase;
   }
@@ -299,25 +360,41 @@ const randomStream = allPhotos
     border-color: var(--text-main); color: var(--text-main); background: var(--bg-surface);
   }
 
-  /* --- THE TIGHT 4PX STREAM --- */
+  /* --- GRID --- */
   .photo-grid {
     max-width: 1400px;
     margin: 0 auto;
     padding: 0 2vw;
-    
-    /* MASONRY COLUMNS */
     column-count: 3;
-    
-    /* THE TIGHT GAP (Matches Home Page) */
-    column-gap: 4px;
+    column-gap: 4px; 
   }
 
   .masonry-item {
-    /* Break inside avoid keeps the image from splitting across columns */
     break-inside: avoid;
-    
-    /* Bottom spacing for the masonry items */
     margin-bottom: 4px;
+  }
+
+  /* --- ARCHIVE LINK --- */
+  .archive-link-wrapper {
+    text-align: center;
+    margin-top: 3rem;
+  }
+  
+  .archive-link {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    text-decoration: none;
+    padding-bottom: 2px;
+    border-bottom: 1px solid transparent;
+    transition: all 0.2s ease;
+  }
+  
+  .archive-link:hover {
+    color: var(--text-main);
+    border-bottom-color: var(--brand-secondary);
   }
 
   /* --- RESPONSIVE --- */
@@ -331,30 +408,10 @@ const randomStream = allPhotos
     .page-title { font-size: 2.5rem; }
     .nav-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
     .nav-title { font-size: 1.1rem; }
-    
-    /* On mobile, usually 2 columns is still good, or 1 if photos are detailed */
     .photo-grid { column-count: 2; } 
   }
 
   .spacer-bottom { height: 6rem; }
-</style>
-
-<style is:global>
-  /* 1. Force Sharp Corners */
-  .sharp-grid .photo-card, 
-  .sharp-grid .photo-card img {
-    border-radius: 0 !important;
-  }
   
-  /* 2. Remove default margins from PhotoCard component so Masonry handles it */
-  .sharp-grid .photo-card {
-    margin: 0 !important; 
-    width: 100%;
-    display: block;
-  }
-  
-  /* 3. Crisp Images */
-  .photo-grid img {
-    image-rendering: -webkit-optimize-contrast;
-  }
+  .photo-grid img { image-rendering: -webkit-optimize-contrast; }
 </style>

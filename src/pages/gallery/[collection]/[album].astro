@@ -4,13 +4,31 @@ import BaseLayout from "../../../layouts/BaseLayout.astro";
 import PhotoCard from "../../../components/PhotoCard.astro";
 import photosData from "../../../data/photos.json";
 
+// Define the shape of a Photo object
+interface Photo {
+  id: string;
+  src: string;
+  full: string;
+  alt: string;
+  collection: string;
+  album: string | null;
+  exif?: string;
+  width: number;
+  height: number;
+}
+
 export async function getStaticPaths() {
-  const allPhotos = photosData.photos || [];
+  const allPhotos = (photosData.photos || []) as Photo[];
   const albumPhotos = allPhotos.filter(p => p.album !== null);
-  const paths = [];
-  const seen = new Set();
+  
+  // Explicitly type the paths array
+  const paths: { params: { collection: string; album: string }; props: { photos: Photo[] } }[] = [];
+  const seen = new Set<string>();
   
   albumPhotos.forEach(p => {
+    // We know album is not null here due to the filter above, but TS might need assurance
+    if (!p.album) return;
+
     const key = `${p.collection}/${p.album}`;
     if (!seen.has(key)) {
       seen.add(key);
@@ -22,6 +40,7 @@ export async function getStaticPaths() {
       });
     }
   });
+
   return paths;
 }
 
@@ -31,13 +50,16 @@ const { photos } = Astro.props;
 // --- CONFIG: Name Mapping ---
 const collectionNames = {
   street: "Street",
-  travel: "Transit",
+  cities: "Cities",
   portrait: "Portraits",
   uncategorized: "Archive"
 };
 
-const parentTitle = collectionNames[collection] || collection.charAt(0).toUpperCase() + collection.slice(1);
-const displayTitle = album.charAt(0).toUpperCase() + album.slice(1);
+// FIX: Tell TS that 'collection' is definitely one of the keys of collectionNames
+const collectionKey = collection as keyof typeof collectionNames;
+const parentTitle = collectionNames[collectionKey] || collection.charAt(0).toUpperCase() + collection.slice(1);
+
+const displayTitle = album ? album.charAt(0).toUpperCase() + album.slice(1) : 'Album';
 const coverImage = photos.length > 0 ? photos[0].src : undefined;
 ---
 
@@ -52,10 +74,10 @@ const coverImage = photos.length > 0 ? photos[0].src : undefined;
     </div>
   </header>
 
-  <section class="photo-grid sharp-grid">
+  <section class="photo-grid">
     {photos.map((photo) => (
       <div class="masonry-item">
-        <PhotoCard photo={photo} />
+        <PhotoCard photo={photo} sharp={true} />
       </div>
     ))}
   </section>
@@ -82,7 +104,8 @@ const coverImage = photos.length > 0 ? photos[0].src : undefined;
 
   .back-link {
     font-family: var(--font-mono);
-    font-size: 0.75rem;
+    /* BUMP UP: 0.75rem -> 0.85rem */
+    font-size: 0.85rem;
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.1em;
@@ -92,12 +115,14 @@ const coverImage = photos.length > 0 ? photos[0].src : undefined;
   .back-link:hover { color: var(--brand-secondary); }
   
   .collection-title {
-    font-family: var(--font-serif);
+    /* UPDATED: Match Home Page */
+    font-family: var(--font-sans);
+    font-weight: 900;
     font-size: clamp(3rem, 5vw, 4rem);
     margin: 0;
     line-height: 1;
     color: var(--text-main);
-    text-transform: capitalize;
+    text-transform: uppercase;
   }
 
   .line-break {
@@ -110,7 +135,8 @@ const coverImage = photos.length > 0 ? photos[0].src : undefined;
 
   .collection-count {
     font-family: var(--font-mono);
-    font-size: 0.8rem;
+    /* BUMP UP: 0.8rem -> 0.9rem */
+    font-size: 0.9rem;
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.1em;
@@ -122,7 +148,7 @@ const coverImage = photos.length > 0 ? photos[0].src : undefined;
     margin: 0 auto;
     padding: 0 2vw;
     column-count: 3;
-    column-gap: 4px; /* Tight 4px gap */
+    column-gap: 4px;
   }
 
   .masonry-item {
@@ -135,11 +161,6 @@ const coverImage = photos.length > 0 ? photos[0].src : undefined;
   }
 
   .spacer { height: 6rem; }
-</style>
 
-<style is:global>
-  .sharp-grid .photo-card, 
-  .sharp-grid .photo-card img { border-radius: 0 !important; }
-  .sharp-grid .photo-card { margin: 0 !important; width: 100%; display: block; }
   .photo-grid img { image-rendering: -webkit-optimize-contrast; }
 </style>

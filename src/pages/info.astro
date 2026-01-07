@@ -24,6 +24,18 @@ randomStrip = randomStrip.slice(0, 15);
     </div>
   </header>
 
+  {/* MOVED: Film strip is now here, between Header and Bio */}
+  <section class="film-strip-container">
+    <div class="film-strip">
+      {randomStrip.map((photo, index) => (
+        <div class="film-frame">
+          <img src={photo.src} alt="" loading="lazy" />
+          <span class="frame-number">{index + 1}A</span>
+        </div>
+      ))}
+    </div>
+  </section>
+
   <section class="bio-section">
     <div class="bio-content">
       <p class="bio-text">
@@ -47,17 +59,6 @@ randomStrip = randomStrip.slice(0, 15);
         <span class="divider">/</span>
         <a href="https://instagram.com/hsphoto70" target="_blank" class="contact-link">Instagram ↗</a>
       </div>
-    </div>
-  </section>
-
-  <section class="film-strip-container">
-    <div class="film-strip">
-      {randomStrip.map((photo, index) => (
-        <div class="film-frame">
-          <img src={photo.src} alt="" loading="lazy" />
-          <span class="frame-number">{index + 1}A</span>
-        </div>
-      ))}
     </div>
   </section>
 
@@ -119,13 +120,16 @@ randomStrip = randomStrip.slice(0, 15);
 
   </div>
 
+  <div class="spacer-bottom"></div>
+
 </BaseLayout>
 
 <style>
-  /* --- HEADER STYLES (Synced with Gallery) --- */
+  /* --- HEADER STYLES --- */
   .page-header {
     margin-top: 3rem;
-    margin-bottom: 4rem; 
+    /* Reduced bottom margin since film strip is now below it */
+    margin-bottom: 2rem; 
     display: flex;
     justify-content: center;
   }
@@ -138,14 +142,15 @@ randomStrip = randomStrip.slice(0, 15);
   }
 
   .page-title {
-    font-family: var(--font-serif);
+    font-family: var(--font-sans);
+    font-weight: 900;
     font-size: clamp(3rem, 5vw, 4rem);
     line-height: 1;
     margin: 0;
     color: var(--text-main);
+    text-transform: uppercase;
   }
 
-  /* The Gold Accent Line */
   .line-break {
     width: 40px;
     height: 2px;
@@ -156,7 +161,8 @@ randomStrip = randomStrip.slice(0, 15);
 
   .page-desc {
     font-family: var(--font-mono);
-    font-size: 0.8rem;
+    /* BUMP UP: 0.8rem -> 0.9rem */
+    font-size: 0.9rem;
     text-transform: uppercase;
     letter-spacing: 0.1em;
     color: var(--text-muted);
@@ -164,52 +170,13 @@ randomStrip = randomStrip.slice(0, 15);
     text-align: center;
   }
 
-  /* --- BIO STYLES --- */
-  .bio-section {
-    margin-bottom: 4rem;
-    max-width: 680px; /* Slightly wider for better reading flow */
-    margin-left: auto;
-    margin-right: auto;
-    padding: 0 1.5rem;
-    text-align: center; 
-  }
-  
-  .bio-text {
-    font-size: 1.15rem;
-    line-height: 1.7;
-    color: var(--text-muted);
-    margin-bottom: 1.5rem;
-  }
-
-  /* Just highlighting the name to start */
-  .highlight { 
-    color: var(--text-main); 
-    font-weight: 500; 
-  }
-
-  .contact-block {
-    margin-top: 3rem;
-    font-family: var(--font-mono);
-    font-size: 0.9rem;
-  }
-
-  .contact-link {
-    color: var(--text-main);
-    text-decoration: none;
-    border-bottom: 1px solid var(--border);
-    transition: all 0.2s ease;
-  }
-  .contact-link:hover { border-bottom-color: var(--brand-secondary); color: var(--brand-secondary); }
-  .divider { margin: 0 1rem; color: var(--border); }
-
-
   /* --- FILM STRIP --- */
   .film-strip-container {
-    margin: 4rem 0 6rem 0;
+    /* Adjusted margins for new position */
+    margin: 2rem 0 4rem 0;
     width: 100%;
     position: relative; 
     overflow: hidden; 
-    /* Soft fade edges */
     mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
     -webkit-mask-image: linear-gradient(to right, transparent 0%, black 10%, black 90%, transparent 100%);
   }
@@ -259,12 +226,51 @@ randomStrip = randomStrip.slice(0, 15);
     bottom: 4px;
     right: 6px;
     font-family: var(--font-mono);
-    font-size: 0.6rem;
+    /* BUMP UP: 0.6rem -> 0.75rem */
+    font-size: 0.75rem;
     color: var(--brand-secondary);
     text-shadow: 0 1px 2px rgba(0,0,0,0.8);
-    opacity: 0.8;
+    opacity: 0.9;
     pointer-events: none;
   }
+
+  /* --- BIO STYLES --- */
+  .bio-section {
+    margin-bottom: 4rem;
+    max-width: 680px; 
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 1.5rem;
+    text-align: center; 
+  }
+  
+  .bio-text {
+    font-size: 1.15rem; /* Already readable size */
+    line-height: 1.7;
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+  }
+
+  .highlight { 
+    color: var(--text-main); 
+    font-weight: 500; 
+  }
+
+  .contact-block {
+    margin-top: 3rem;
+    font-family: var(--font-mono);
+    /* BUMP UP: 0.9rem -> 1rem */
+    font-size: 1rem;
+  }
+
+  .contact-link {
+    color: var(--text-main);
+    text-decoration: none;
+    border-bottom: 1px solid var(--border);
+    transition: all 0.2s ease;
+  }
+  .contact-link:hover { border-bottom-color: var(--brand-secondary); color: var(--brand-secondary); }
+  .divider { margin: 0 1rem; color: var(--border); }
 
   /* --- LISTS --- */
   .grid-layout {
@@ -283,7 +289,8 @@ randomStrip = randomStrip.slice(0, 15);
   }
 
   .section-title {
-    font-size: 0.8rem;
+    /* BUMP UP: 0.8rem -> 0.9rem */
+    font-size: 0.9rem;
     text-transform: uppercase;
     letter-spacing: 0.15em;
     color: var(--text-muted);
@@ -314,8 +321,11 @@ randomStrip = randomStrip.slice(0, 15);
 
   .detail {
     font-family: var(--font-mono);
-    font-size: 0.8rem; 
+    /* BUMP UP: 0.8rem -> 0.95rem */
+    font-size: 0.95rem; 
     color: var(--text-muted);
     line-height: 1.4;
   }
+
+  .spacer-bottom { height: 4rem; }
 </style>

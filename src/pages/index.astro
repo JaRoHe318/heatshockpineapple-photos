@@ -156,7 +156,8 @@ const mosaicPhotos = shuffled.slice(0, 8);
   .btn-primary { 
     background-color: var(--text-main); color: var(--bg-paper); padding: 16px 36px; 
     border-radius: 50px; text-decoration: none; font-family: var(--font-sans); 
-    box-shadow: 0 4px 15px rgba(0,0,0, 0.1); 
+    box-shadow: 0 4px 15px rgba(0,0,0, 0.1);
+    font-size: 1.05rem; 
   }
   .btn-text { color: var(--text-main); text-decoration: none; font-family: var(--font-sans); }
 
@@ -197,10 +198,19 @@ const mosaicPhotos = shuffled.slice(0, 8);
     transform: rotate(-1.5deg); 
   }
   .meta-label { 
-    font-family: var(--font-sans); font-size: 0.7rem; color: var(--brand-secondary); 
+    font-family: var(--font-sans); 
+    /* BUMP UP: 0.8rem -> 0.875rem (14px) */
+    font-size: 0.875rem; 
+    color: var(--brand-secondary); 
     text-transform: uppercase; font-weight: 800; letter-spacing: 0.1em;
   }
-  .mono { font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-main); }
+  .mono { 
+    font-family: var(--font-mono); 
+    /* BUMP UP: 0.95rem -> 1rem (16px) */
+    /* EXIF data is technical, so making it full base size helps readability */
+    font-size: 1rem; 
+    color: var(--text-main);
+  }
 
   /* === MOSAIC === */
   .mosaic-section {
@@ -214,7 +224,13 @@ const mosaicPhotos = shuffled.slice(0, 8);
     display: flex; align-items: center; margin-bottom: 2rem; opacity: 0.9;
     border-bottom: 1px solid var(--border); padding-bottom: 1rem;
   }
-  .mono-label { font-family: var(--font-mono); font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  
+  .mono-label { 
+    font-family: var(--font-mono); 
+    /* BUMP UP: 0.9rem -> 1rem (16px) */
+    font-size: 1rem; 
+    color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; 
+  }
 
   .editorial-mosaic {
     display: grid;
