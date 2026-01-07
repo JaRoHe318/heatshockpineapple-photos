@@ -2,7 +2,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import sharp from 'sharp';
-import { glob } from 'glob';
+import { glob } from 'glob'; // Fixed import for modern Node
 import exifParser from 'exif-parser';
 
 // CONFIGURATION
@@ -29,6 +29,26 @@ async function generate() {
     process.exit(1);
   }
 
+  // --- NEW: CAPTION MEMORY START ---
+  // We load the existing JSON first to save any manual captions
+  const captionMap = new Map();
+  if (await fs.pathExists(DATA_FILE)) {
+    try {
+      const oldData = await fs.readJson(DATA_FILE);
+      if (oldData.photos) {
+        oldData.photos.forEach(photo => {
+          if (photo.caption) {
+            captionMap.set(photo.id, photo.caption);
+          }
+        });
+        console.log(`🧠 Remembered ${captionMap.size} manual captions.`);
+      }
+    } catch (e) {
+      console.warn("⚠️ Could not read old photos.json to preserve captions.");
+    }
+  }
+  // --- NEW: CAPTION MEMORY END ---
+
   console.log(`📷 Scanning photo library in ${PROJECTS_DIR}...`);
 
   await fs.ensureDir(THUMBS_DIR);
@@ -46,7 +66,7 @@ async function generate() {
   const images = await glob(`${PROJECTS_DIR}/**/*.{jpg,jpeg,png,webp,JPG,JPEG,PNG,WEBP}`);
   const photos = [];
 
-for (const filePath of images) {
+  for (const filePath of images) {
     const relativePath = path.relative(PROJECTS_DIR, filePath);
     const relKey = relativePath.split(path.sep).join('/');
 
@@ -55,21 +75,19 @@ for (const filePath of images) {
 
     const pathParts = relKey.split('/');
     
-    // === NEW LOGIC START ===
-    let category = 'uncategorized'; // Label root photos as this
+    // Logic: Categorize based on folder structure
+    let category = 'uncategorized'; 
     let album = null;
 
     if (pathParts.length >= 2) {
       category = pathParts[0];
       album = pathParts.length > 2 ? pathParts.slice(1, -1).join('/') : null;
     }
-    // === NEW LOGIC END ===
 
     const id = relKey.replace(/\.[^/.]+$/, '').split('/').join('__');
 
     // WEB PATHS
     const outBase = relKey.replace(/\.(jpe?g|png|webp)$/i, '');
-    // This will put root photos directly in /images/thumbs/photo.jpg
     const webThumbPath = `/images/thumbs/${outBase}.jpg`;
     const webFullPath = `/images/full/${outBase}.jpg`;
 
@@ -148,22 +166,31 @@ for (const filePath of images) {
       
       if (!isGeneric) altParts.push(filenameBase.replace(/[-_]/g, ' '));
       if (album) altParts.push(album === 'SF' ? 'San Francisco' : album);
-      if (category) altParts.push(category); // "Stream" will appear in alt text for root photos
+      if (category) altParts.push(category); 
       altParts.push('photograph');
       const altText = altParts.join(' ');
 
-      photos.push({
+      // Build the final object
+      const photoObj = {
         id,
         src: webThumbPath,
         full: webFullPath,
         alt: altText,
-        collection: category, // This will categorize them as "stream"
+        collection: category,
         category,
         album,
         exif: exifString,
         width: finalWidth,
         height: finalHeight,
-      });
+      };
+
+      // --- NEW: RESTORE CAPTION ---
+      if (captionMap.has(id)) {
+        photoObj.caption = captionMap.get(id);
+      }
+      // ----------------------------
+
+      photos.push(photoObj);
 
       stats.total++;
     } catch (err) {
@@ -182,6 +209,7 @@ Source:         ${PROJECTS_DIR}
 Total Photos:   ${stats.total}
 Thumbs Gen:     ${stats.generatedThumbs} (JPG+WebP)
 Fulls Gen:      ${stats.generatedFulls} (JPG+WebP)
+Restored Caps:  ${captionMap.size}
 Failed:         ${stats.failed}
 -----------------------------------
 `);
