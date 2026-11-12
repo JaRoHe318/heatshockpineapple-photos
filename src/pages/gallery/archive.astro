@@ -1,0 +1,22 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PhotoCard from "../../components/PhotoCard.astro";
+import photosData from "../../data/photos.json";
+---
+<BaseLayout title="Full Archive" description="Every photograph in the Heat Shock Pineapple collection.">
+  <header class="archive-header">
+    <a href="/gallery">← All Collections</a>
+    <h1>Full Archive</h1>
+    <p>{photosData.photos.length} Frames · All collections</p>
+  </header>
+  <section class="photo-grid" aria-label="All photographs">
+    {photosData.photos.map(photo => <div class="masonry-item"><PhotoCard photo={photo} sharp={true} /></div>)}
+  </section>
+</BaseLayout>
+<style>
+  .archive-header { margin: 3rem 2vw 4rem; }
+  .archive-header a, .archive-header p { font-family: var(--font-mono); color: var(--text-muted); }
+  h1 { font-size: clamp(2rem, 5vw, 4rem); font-weight: 900; text-transform: uppercase; line-height: 1; margin-block: 1rem; }
+  .photo-grid { margin-inline: 2vw; column-gap: 4px; }
+  .masonry-item { break-inside: avoid; margin-bottom: 4px; }
+</style>

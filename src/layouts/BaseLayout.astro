@@ -1,4 +1,5 @@
 ---
+import ThemeInit from '@heatshockpineapple/astro-ui/ThemeInit.astro';
 /* src/layouts/BaseLayout.astro */
 import { ClientRouter } from 'astro:transitions'; 
 import "../styles/global.css";
@@ -42,20 +43,20 @@ const socialImageURL = new URL(image, Astro.site).href;
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="shortcut icon" href="/favicon.ico" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:site_name" content={siteName} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={socialImageURL} />
     <meta property="og:type" content={type} />
     <meta property="og:image" content={socialImageURL} />
 
     <meta name="theme-color" content="#121212" />
 
-    <script is:inline>
-        const setTheme = () => {
-          const stored = localStorage.getItem("theme");
-          const theme = stored || "dark"; 
-          document.documentElement.setAttribute("data-theme", theme);
-        };
-        setTheme();
-        document.addEventListener("astro:after-swap", setTheme);
-    </script>
+    <ThemeInit defaultTheme="dark" />
   </head>
   <body>
     <a href="#main-gallery" class="skip-link">Skip to content</a>
@@ -70,66 +71,36 @@ const socialImageURL = new URL(image, Astro.site).href;
 
     <script>
       import PhotoSwipeLightbox from 'photoswipe/lightbox';
-      import PhotoSwipe from 'photoswipe';
-
-      // FIX: added ': any' to satisfy TypeScript
-      let lightbox: any;
-
+      let lightbox: PhotoSwipeLightbox | undefined;
+      function cleanupLightbox() {
+        lightbox?.destroy();
+        lightbox = undefined;
+      }
       function initLightbox() {
+        cleanupLightbox();
+        if (!document.querySelector('#main-gallery a.pswp-link')) return;
         lightbox = new PhotoSwipeLightbox({
-          gallery: '#main-gallery', 
-          children: 'a.pswp-link',
-          pswpModule: PhotoSwipe,
-          
-          /* 1. OPACITY SETTINGS */
-          bgOpacity: 0.95, 
-          showHideOpacity: true,
-          
-          /* 2. BEHAVIOR */
-          wheelToZoom: true,
-          preload: [1, 3],
-
-          // FIX: added ': any' to viewportSize
-          paddingFn: (viewportSize: any) => {
-            return { top: 0, bottom: 0, left: 0, right: 0 }
-          }
+          gallery: '#main-gallery', children: 'a.pswp-link',
+          pswpModule: () => import('photoswipe'),
+          bgOpacity: 0.95, showHideOpacity: true, wheelToZoom: true,
+          preload: [1, 3], padding: { top: 0, bottom: 0, left: 0, right: 0 }
         });
-
-        /* 3. CAPTION LOGIC */
-        lightbox.on('uiRegister', function() {
-          lightbox.pswp.ui.registerElement({
-            name: 'custom-caption',
-            order: 9,
-            isButton: false,
-            appendTo: 'root',
-            html: '',
-            // FIX: added ': any' to el and pswp
-            onInit: (el: any, pswp: any) => {
-              lightbox.pswp.on('change', () => {
-                const currSlide = lightbox.pswp.currSlide;
-                if (currSlide && currSlide.data.element) {
-                  const hiddenCaption = currSlide.data.element.parentNode.querySelector('.hidden-caption');
-                  if (hiddenCaption) {
-                    el.innerHTML = hiddenCaption.innerHTML;
-                  } else {
-                    el.innerHTML = '';
-                  }
-                }
+        const instance = lightbox;
+        instance.on('uiRegister', () => {
+          instance.pswp?.ui?.registerElement({
+            name: 'custom-caption', order: 9, isButton: false, appendTo: 'root',
+            onInit: (el, pswp) => {
+              pswp.on('change', () => {
+                const caption = pswp.currSlide?.data.element?.closest('.photo-card')?.querySelector('.hidden-caption');
+                el.replaceChildren(...(caption ? Array.from(caption.childNodes, node => node.cloneNode(true)) : []));
               });
             }
           });
         });
-
-        lightbox.init();
+        instance.init();
       }
-
-      document.addEventListener('astro:page-load', () => {
-        if (lightbox) {
-          lightbox.destroy();
-          lightbox = null;
-        }
-        initLightbox();
-      });
+      document.addEventListener('astro:page-load', initLightbox);
+      document.addEventListener('astro:before-swap', cleanupLightbox);
     </script>
   </body>
 </html>

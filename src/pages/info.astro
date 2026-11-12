@@ -2,10 +2,11 @@
 /* src/pages/info.astro */
 import BaseLayout from "../layouts/BaseLayout.astro";
 import photosData from "../data/photos.json";
+import { shuffledSample } from "../lib/photos.mjs";
 
 // 1. DATA LOGIC
 const allPhotos = photosData.photos || [];
-let randomStrip = allPhotos.sort(() => 0.5 - Math.random());
+let randomStrip = shuffledSample(allPhotos);
 
 while (randomStrip.length < 15 && randomStrip.length > 0) {
   randomStrip = [...randomStrip, ...randomStrip];
@@ -45,21 +46,17 @@ const portraitImage = "/images/ui/IMG_7292.jpg";
         {/* LEFT COL: Text */}
         <div class="bio-text-col">
           <p class="bio-text">
-            I’m <span class="highlight">Jason Hernandez (JRH)</span>, a photographer based in Los Angeles.
-          </p>
-          
-          <p class="bio-text">
-            I take pictures of people and everyday life while I’m out and about. I started with film. Having to shoot it, develop it, and print it taught me to pay attention to the edges of the shot and make fast decisions.
-          </p>
-          
-          <p class="bio-text">
-            My parents, like a lot of immigrants in the U.S., don’t travel because of the risk. I can’t bring them with me to the cities I visit, so I bring the cities to them.
+            <span class="highlight">Jason Hernandez (JRH)</span> is a photographer based in San Francisco who enjoys taking photos of friends, strangers, and whatever has good lighting.
           </p>
 
           <p class="bio-text">
-            Photographs hold slivers of time. Years later, they’re still there.
+            The proud son of Guatemalan and Mexican immigrants, he was born and raised in Los Angeles, where he grew up working in the family print shop, helping his dad develop silkscreens and watching his mom do graphic design.
           </p>
-          
+
+          <p class="bio-text">
+            Not everyone has the freedom to travel without fear. So, as a giant middle finger to the current administration, he&#x27;s taken it upon himself to travel as much as possible, bringing slivers of each city back home to his family.
+          </p>
+
           <div class="contact-block">
             <a href="mailto:photos@heatshockpineapple.com" class="contact-link">Get in touch &rarr;</a>
             <span class="divider">/</span>
@@ -71,7 +68,7 @@ const portraitImage = "/images/ui/IMG_7292.jpg";
         <div class="bio-image-col">
           <figure class="portrait-frame">
             <img src={portraitImage} alt="Jason Hernandez" loading="lazy" />
-            <figcaption class="mono-label">J.R.H. // Los Angeles</figcaption>
+            <figcaption class="mono-label">J.R.H. // San Francisco</figcaption>
           </figure>
         </div>
 
@@ -79,9 +76,8 @@ const portraitImage = "/images/ui/IMG_7292.jpg";
     </section>
 
     <div class="grid-layout">
-      
       <section>
-        <h2 class="section-title">01 // The Kit</h2>
+        <h2 class="section-title">The Kit</h2>
         <ul class="resource-list">
           <li>
             <span class="item">Canon EOS M6 Mark II</span>
@@ -97,43 +93,6 @@ const portraitImage = "/images/ui/IMG_7292.jpg";
           </li>
         </ul>
       </section>
-
-      <section>
-        <h2 class="section-title">02 // The Darkroom</h2>
-        <ul class="resource-list">
-          <li>
-            <span class="item">Lightroom Classic</span>
-            <span class="detail">Cataloging & Color Grading.</span>
-          </li>
-          <li>
-            <span class="item">Photoshop</span>
-            <span class="detail">Heavy retouching and composites.</span>
-          </li>
-          <li>
-            <span class="item">Topaz DeNoise</span>
-            <span class="detail">High ISO rescue for night street photography.</span>
-          </li>
-        </ul>
-      </section>
-
-      <section>
-        <h2 class="section-title">03 // Input</h2>
-        <ul class="resource-list">
-          <li>
-            <span class="item">The Nature of Photographs</span>
-            <span class="detail">Stephen Shore</span>
-          </li>
-          <li>
-            <span class="item">Ways of Seeing</span>
-            <span class="detail">John Berger</span>
-          </li>
-          <li>
-            <span class="item">On Photography</span>
-            <span class="detail">Susan Sontag</span>
-          </li>
-        </ul>
-      </section>
-
     </div>
 
   </div>

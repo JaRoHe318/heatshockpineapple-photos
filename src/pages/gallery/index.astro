@@ -4,10 +4,11 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import PhotoCard from "../../components/PhotoCard.astro";
 import photosData from "../../data/photos.json";
+import { shuffledSample } from "../../lib/photos.mjs";
 
 interface Photo {
   id: string; src: string; full: string; alt: string;
-  collection: string; album: string | null; exif?: string;
+  collection: string; album: string | null; exif?: string; caption?: string;
   width: number; height: number;
 }
 
@@ -36,7 +37,7 @@ const collections = uniqueCollections.map(name => {
 });
 
 // --- PREPARE STREAM ---
-const randomStream = allPhotos.sort(() => 0.5 - Math.random()).slice(0, 15);
+const randomStream = shuffledSample(allPhotos, 15);
 ---
 
 <BaseLayout title="Gallery" description="Browse gallery and featured shots.">
@@ -76,6 +77,8 @@ const randomStream = allPhotos.sort(() => 0.5 - Math.random()).slice(0, 15);
     </button>
   </div>
 
+  <p id="shuffle-status" class="sr-only" aria-live="polite" aria-atomic="true"></p>
+  <template id="stream-card-template"><div class="masonry-item"><PhotoCard photo={allPhotos[0]} sharp={true} /></div></template>
   <section class="photo-grid" id="stream-grid" data-all-photos={JSON.stringify(allPhotos)}>
     {randomStream.map((photo) => (
       <div class="masonry-item">
@@ -85,7 +88,7 @@ const randomStream = allPhotos.sort(() => 0.5 - Math.random()).slice(0, 15);
   </section>
 
   <div class="archive-link-wrapper">
-    <a href="/gallery/uncategorized" class="archive-link">View Full Archive &rarr;</a>
+    <a href="/gallery/archive" class="archive-link">View Full Archive &rarr;</a>
   </div>
 
   <div class="spacer-bottom"></div>
@@ -93,44 +96,35 @@ const randomStream = allPhotos.sort(() => 0.5 - Math.random()).slice(0, 15);
 </BaseLayout>
 
 <script>
-  // CLIENT SIDE SHUFFLE LOGIC
-  interface Photo { id: string; src: string; full: string; alt: string; collection: string; album: string | null; exif?: string; width: number; height: number; }
-
+  import { shuffledSample } from '../../lib/photos.mjs';
+  import { fillPhotoCard } from '../../lib/photo-card';
+  let pending: ReturnType<typeof setTimeout> | undefined;
+  document.addEventListener('astro:before-swap', () => clearTimeout(pending));
   document.addEventListener('astro:page-load', () => {
-    const btn = document.getElementById('shuffle-btn');
-    const grid = document.getElementById('stream-grid');
-
-    if (btn && grid) {
-      const allPhotos = JSON.parse(grid.dataset.allPhotos || '[]') as Photo[];
-
-      btn.addEventListener('click', () => {
-        const originalText = btn.innerHTML;
-        btn.innerHTML = "↻"; btn.style.opacity = "0.7"; btn.style.pointerEvents = "none";
-        grid.style.opacity = "0.5"; grid.style.transition = "opacity 0.2s";
-
-        setTimeout(() => {
-          const newBatch = allPhotos.sort(() => 0.5 - Math.random()).slice(0, 15);
-          grid.innerHTML = newBatch.map((photo: Photo) => {
-            const webpSrc = photo.src.replace(/\.jpe?g$/i, '.webp');
-            return `
-            <div class="masonry-item">
-              <figure class="photo-card is-sharp">
-                <a href="${photo.full}" data-pswp-width="${photo.width}" data-pswp-height="${photo.height}" class="pswp-link" target="_blank">
-                  <picture>
-                    <source srcset="${webpSrc}" type="image/webp" />
-                    <img src="${photo.src}" alt="${photo.alt || ''}" width="${photo.width}" height="${photo.height}" loading="lazy" decoding="async" style="aspect-ratio: ${photo.width} / ${photo.height};" />
-                  </picture>
-                </a>
-                <div class="card-overlay">
-                  ${photo.exif ? `<span class="overlay-exif">${photo.exif}</span>` : ''}
-                </div>
-              </figure>
-            </div>`;
-          }).join('');
-          grid.style.opacity = "1"; btn.innerHTML = originalText; btn.style.opacity = "1"; btn.style.pointerEvents = "auto";
-        }, 300);
-      });
-    }
+    const btn = document.querySelector<HTMLButtonElement>('#shuffle-btn');
+    const grid = document.querySelector<HTMLElement>('#stream-grid');
+    const template = document.querySelector<HTMLTemplateElement>('#stream-card-template');
+    const status = document.getElementById('shuffle-status');
+    if (!btn || !grid || !template || grid.dataset.initialized) return;
+    grid.dataset.initialized = 'true';
+    const photos = JSON.parse(grid.dataset.allPhotos || '[]');
+    btn.addEventListener('click', () => {
+      btn.disabled = true;
+      grid.setAttribute('aria-busy', 'true');
+      grid.style.opacity = '0.5';
+      pending = setTimeout(() => {
+        const cards = shuffledSample(photos, 15).map(photo => {
+          const fragment = template.content.cloneNode(true) as DocumentFragment;
+          fillPhotoCard(fragment, photo);
+          return fragment;
+        });
+        grid.replaceChildren(...cards);
+        grid.style.opacity = '1';
+        grid.removeAttribute('aria-busy');
+        btn.disabled = false;
+        if (status) status.textContent = 'Stream refreshed with 15 photographs.';
+      }, 300);
+    });
   });
 </script>
 
@@ -282,3 +276,4 @@ const randomStream = allPhotos.sort(() => 0.5 - Math.random()).slice(0, 15);
   .spacer-bottom { height: 6rem; }
   .photo-grid img { image-rendering: -webkit-optimize-contrast; }
 </style>
+<style>.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }</style>

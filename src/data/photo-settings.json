@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "photos": {
+    "photo_4ef610ad-53df-4430-a802-78cbb2044049": {
+      "alt": "Antigua, Guatemala",
+      "caption": "",
+      "collection": "Cities",
+      "album": "Guatemala"
+    },
+    "photo_1b1e9613-6905-4b5f-8689-c39ce16067f1": {
+      "alt": "Driving down Antigua, Guatemala",
+      "caption": "Antigua, Guatemala",
+      "collection": "Cities",
+      "album": "Guatemala"
+    },
+    "20250801_123421_M6_2480": {
+      "alt": "Photo of \"The World's Largest Egg\" in Winlock, Washington, taken from the Amtrak",
+      "caption": "\"The World's Largest Egg\" in Winlock, Washington.",
+      "collection": "uncategorized",
+      "album": null
+    },
+    "Street__IMG_4327": {
+      "alt": "No Kings Protest in San Francisco",
+      "caption": "",
+      "collection": "Street",
+      "album": null
+    },
+    "photo_a1d76c81-2e64-42ec-aa56-11625d24c34c": {
+      "alt": "Antigua, Guatemala",
+      "caption": "",
+      "collection": "Cities",
+      "album": "Guatemala"
+    }
+  },
+  "home": {
+    "selectedIds": [
+      "Cities__NYC__IMG_7173",
+      "Cities__Seattle__IMG_0522",
+      "Cities__SF__IMG_4509",
+      "Cities__Chicago__20250711_123627_M6_5292",
+      "Street__IMG_0463",
+      "Portrait__IMG_2914",
+      "Street__20250718_084255_M6_5901",
+      "Cities__Boston__IMG_7839",
+      "photo_4ef610ad-53df-4430-a802-78cbb2044049",
+      "photo_1b1e9613-6905-4b5f-8689-c39ce16067f1"
+    ],
+    "heroIds": null
+  }
+}

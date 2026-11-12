@@ -30,3 +30,5 @@ originals/
 
 # NOTE: We do NOT ignore 'public/images/thumbs' or 'public/images/full'.
 # We want Git to track these so they get uploaded to your website.
+# Private local manager state and recovery backups
+.photo-manager/

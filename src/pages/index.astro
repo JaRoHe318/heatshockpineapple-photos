@@ -3,28 +3,20 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import PhotoCard from "../components/PhotoCard.astro"; 
 import photosData from "../data/photos.json";
+import photoSettings from "../data/photo-settings.json";
 
 // 1. HERO DATA
 const allPhotos = photosData.photos || [];
 
-const validHeroPhotos = allPhotos.filter(p => p.full && p.full.length > 0);
-const heroCandidates = JSON.stringify(validHeroPhotos.map(p => ({ 
-  full: p.full, 
-  alt: p.alt || "Featured photography shot", 
-  exif: p.exif || "Unknown Camera" 
-})));
+const heroIds = photoSettings.home.heroIds as string[] | null;
+const configuredHeroes = allPhotos.filter(p => p.full && (!heroIds || heroIds.includes(p.id)));
+const validHeroPhotos = configuredHeroes.length ? configuredHeroes : allPhotos.filter(p => p.full);
+const initialHero = validHeroPhotos.find(p => p.id === "Cities__NYC__IMG_7173") || validHeroPhotos[0];
+const heroCandidates = JSON.stringify(validHeroPhotos.map(p => ({ full: p.full, src: p.src, width: p.width, alt: p.alt, exif: p.exif })));
+const heroSizes = "(min-width: 700px) 45vw, 85vw";
 
 // 2. SELECTED WORKS
-const selectedIds = [
-  "Cities__NYC__IMG_7173",
-  "Cities__Seattle__IMG_0522",
-  "Cities__SF__IMG_4509",
-  "Cities__Chicago__20250711_123627_M6_5292",
-  "Street__IMG_0463",
-  "Portrait__IMG_2914",
-  "Street__20250718_084255_M6_5901",
-  "Cities__Boston__IMG_7839"
-];
+const selectedIds = photoSettings.home.selectedIds;
 
 // 3. BUILD THE LIST
 const mosaicPhotos = [];
@@ -57,19 +49,14 @@ for (const id of selectedIds) {
     </div>
 
     <div class="hero-visual">
-      <div class="polaroid-stack">
-        <img 
-          id="hero-img"
-          src="" 
-          alt="Loading..."
-          class="hero-img is-loading" 
-          width="600"
-          height="750"
-          loading="eager"
-        />
+      <div class="polaroid-stack" data-hero-photos={heroCandidates}>
+        <picture>
+          <source id="hero-webp" type="image/webp" srcset={`${initialHero.src.replace(/\.jpe?g$/i, '.webp')} 800w, ${initialHero.full.replace(/\.jpe?g$/i, '.webp')} ${initialHero.width}w`} sizes={heroSizes} />
+          <img id="hero-img" src={initialHero.src} srcset={`${initialHero.src} 800w, ${initialHero.full} ${initialHero.width}w`} sizes={heroSizes} alt={initialHero.alt} class="hero-img" width="600" height="750" loading="eager" fetchpriority="high" />
+        </picture>
         <div class="meta-tag">
             <span class="meta-label">FEATURED SHOT</span>
-            <span id="hero-exif" class="mono">LOADING DATA...</span>
+            <span id="hero-exif" class="mono">{initialHero.exif || "Featured photograph"}</span>
         </div>
       </div>
     </div>
@@ -93,44 +80,29 @@ for (const id of selectedIds) {
 
 </BaseLayout>
 
-<script id="hero-data" type="application/json" set:html={heroCandidates}></script>
-
-<script is:inline>
+<script>
   function initHero() {
-    const dataEl = document.getElementById('hero-data');
-    const img = document.getElementById('hero-img');
+    const container = document.querySelector<HTMLElement>('[data-hero-photos]');
+    const img = document.querySelector<HTMLImageElement>('#hero-img');
+    const source = document.querySelector<HTMLSourceElement>('#hero-webp');
     const exif = document.getElementById('hero-exif');
-    
-    if (!dataEl || !img || !exif) return;
-
-    let candidates = [];
-    try {
-      candidates = JSON.parse(dataEl.textContent);
-    } catch (e) {
-      console.error("JSON Parse Error", e);
-      return;
-    }
-
-    if (!candidates || candidates.length === 0) return;
-
-    const last = sessionStorage.getItem("lastHero");
-    let pick = candidates[Math.floor(Math.random() * candidates.length)];
-    
-    for (let i = 0; i < 5 && pick.full === last; i++) {
-      pick = candidates[Math.floor(Math.random() * candidates.length)];
-    }
-    sessionStorage.setItem("lastHero", pick.full);
-
-    img.src = pick.full;
-    img.alt = pick.alt;
-    exif.textContent = pick.exif;
-
-    if (img.complete) { img.classList.remove('is-loading'); } 
-    else { img.onload = () => img.classList.remove('is-loading'); }
+    if (!container || !img || !source || !exif || container.dataset.initialized) return;
+    container.dataset.initialized = 'true';
+    const candidates: { full: string; src: string; width: number; alt?: string; exif?: string }[] = JSON.parse(container.dataset.heroPhotos || '[]');
+    let last = '';
+    try { last = sessionStorage.getItem('lastHero') || ''; } catch { /* Photo remains usable without storage. */ }
+    const choices = candidates.filter(p => p.full !== last);
+    const pool = choices.length ? choices : candidates;
+    if (!pool.length) return;
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    try { sessionStorage.setItem('lastHero', pick.full); } catch { /* Storage is optional. */ }
+    source.srcset = `${pick.src.replace(/\.jpe?g$/i, '.webp')} 800w, ${pick.full.replace(/\.jpe?g$/i, '.webp')} ${pick.width}w`;
+    img.srcset = `${pick.src} 800w, ${pick.full} ${pick.width}w`;
+    img.src = pick.src;
+    img.alt = pick.alt || 'Featured photograph';
+    exif.textContent = pick.exif || 'Featured photograph';
   }
-  
-  initHero();
-  document.addEventListener('astro:after-swap', initHero);
+  document.addEventListener('astro:page-load', initHero);
 </script>
 
 <style>
@@ -221,4 +193,12 @@ for (const id of selectedIds) {
   .photo-grid :global(.photo-card) {
     background: transparent !important;
   }
+
+  @media (max-width: 699px) {
+    .hero-section { padding-inline: 0; }
+    .hero-title { font-size: clamp(1.55rem, 6.4vw, 2.8rem); }
+    .meta-tag { right: 0; max-width: 100%; }
+  }
+  :global([data-theme="light"]) .text-gold,
+  :global([data-theme="light"]) .meta-label { color: #946300 !important; }
 </style>

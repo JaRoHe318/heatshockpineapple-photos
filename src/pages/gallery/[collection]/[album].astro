@@ -57,12 +57,13 @@ const collectionNames: Record<string, string> = {
 // --- CONFIG: Album Descriptions ---
 // FIX: Added ': Record<string, string>' so TS allows using any string to look up values
 const albumDescriptions: Record<string, string> = {
-  "boston": "Old brick meeting new glass. Walking the irregular streets where history overlaps with the morning commute.",
-  "chicago": "The grid and the river. A study in structure, cold wind, and the way steel frames the sky.",
-  "nyc": "Verticality and compression. The light hits differently when it has to travel down forty stories to reach the pavement.",
-  "seattle": "Rain shadows and ferries. A city that exists in the gray space between the mountains and the sound.",
-  "sf": "Fog lines and steep gradients. A collection of moments from the bay.",
-  "vancouver bc": "Glass towers on the edge of the wilderness. Where the Pacific meets the pavement.",
+  "guatemala": "The Fatherland.",
+  "boston": "Every person from Boston I've met has been refreshingly straightforward. The city unfortunately, not so much...",
+  "chicago": "I've only been to Chicago in the summer, there really is no place like it!",
+  "nyc": "I left my heart in San Francisco, but it definitely broke in NYC...",
+  "seattle": "I absolutely adore the PNW. A man threatened to beat my head in here. At least they have really good teriyaki chicken.",
+  "sf": "I used to hate SF until I saw more cities. It could definitely be worse...",
+  "vancouver bc": "Why was everyone so fit and happy here?",
   "los angeles": "Sprawl and golden hour. Finding the moments of stillness in the endless motion of the freeway city.",
   "east lansing": "Quiet spaces and campus lines. Observations from the places where things move a little slower."
 };
@@ -81,7 +82,7 @@ const displayDesc = albumDescriptions[albumKey] || `Selected frames from ${displ
 const coverImage = photos.length > 0 ? photos[0].src : undefined;
 ---
 
-<BaseLayout title={`${displayTitle} - ${parentTitle}`} image={coverImage}>
+<BaseLayout title={`${displayTitle} - ${parentTitle}`} image={coverImage} description={displayDesc}>
   
   <header class="collection-header">
     <div class="header-content">
@@ -199,4 +200,7 @@ const coverImage = photos.length > 0 ? photos[0].src : undefined;
   .spacer { height: 6rem; }
 
   .photo-grid img { image-rendering: -webkit-optimize-contrast; }
+  @media (max-width: 400px) {
+    .collection-title { font-size: clamp(2rem, 9vw, 3rem); overflow-wrap: anywhere; }
+  }
 </style>

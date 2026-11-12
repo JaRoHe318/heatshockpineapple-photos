@@ -25,9 +25,9 @@ const { photos } = Astro.props;
 
 // --- CONFIG ---
 const collectionInfo = {
-  street: { title: "Street", desc: "The unscripted choreography of the city. Observations from Boston, Chicago, and New York." },
-  cities: { title: "Cities", desc: "Visual notes from the spaces in between. Not about the destination, but the displacement of being somewhere new." },
-  portrait: { title: "Portraits", desc: "The variable element. Friends, strangers, and the brief moments of eye contact that break the pattern." },
+  street: { title: "Street", desc: "\"Street by street, breath by breath\"" },
+  cities: { title: "Cities", desc: "Man-made temples of productivity and concrete." },
+  portrait: { title: "Portraits", desc: "Slivers of persona captured on film" },
   uncategorized: { title: "Archive", desc: "Miscellaneous shots from the cutting room floor." }
 };
 
@@ -232,4 +232,7 @@ const albumCards = uniqueAlbums.map(name => {
   .masonry-item { break-inside: avoid; margin-bottom: 4px; }
   @media (max-width: 600px) { .photo-grid { column-count: 2; } }
   .photo-grid img { image-rendering: -webkit-optimize-contrast; }
+  @media (max-width: 400px) {
+    .collection-title { font-size: clamp(2rem, 9vw, 3rem); overflow-wrap: anywhere; }
+  }
 </style>

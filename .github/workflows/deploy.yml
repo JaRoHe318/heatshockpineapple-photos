@@ -24,7 +24,7 @@ jobs:
       - name: Install, build, and upload
         uses: withastro/action@v5
         with:
-          node-version: 20      # fine for you
+          node-version: 22.23.5  # validated shared UI runtime
           # path: .            # root of the Astro project (default)
 
   deploy:

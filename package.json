@@ -10,10 +10,13 @@
     "photos": "node scripts/generate-photos.mjs",
     "clean": "node scripts/batman-maker.js",
     "sync": "npm run photos && npm run clean",
-    "astro": "astro"
+    "astro": "astro",
+    "manager": "node scripts/photo-manager/server.mjs",
+    "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.6.0",
+    "@heatshockpineapple/astro-ui": "file:vendor/heatshockpineapple-astro-ui-0.1.2.tgz",
     "@heatshockpineapple/design-tokens": "github:JaRoHe318/pineapple-design-tokens",
     "astro": "^5.0.0",
     "photoswipe": "^5.4.4"
