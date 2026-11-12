@@ -15,7 +15,7 @@ interface Photo {
 const allPhotos = (photosData.photos || []) as Photo[];
 
 // --- PREPARE COLLECTIONS ---
-const customOrder = ['Portrait', 'Street', 'Cities'];
+const customOrder = ['Cities', 'Street', 'Portrait'];
 const uniqueCollections = [...new Set(allPhotos.map(p => p.collection))]
   .filter(c => c !== 'uncategorized') 
   .sort((a, b) => {

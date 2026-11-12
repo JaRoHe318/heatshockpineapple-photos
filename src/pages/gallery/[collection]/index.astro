@@ -37,6 +37,7 @@ const displayTitle = currentInfo.title;
 
 const albumPhotos = photos.filter(p => p.album !== null);
 const uniqueAlbums = [...new Set(albumPhotos.map(p => p.album))];
+if (collectionKey === "cities") uniqueAlbums.sort((a, b) => a.localeCompare(b, "en", { sensitivity: "base", numeric: true }));
 const streamPhotos = photos.filter(p => p.album === null);
 
 const albumCards = uniqueAlbums.map(name => {

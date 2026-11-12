@@ -3,3 +3,5 @@
 .file-locations{font-size:11px;color:var(--muted);margin:0 0 22px}.file-locations summary{cursor:pointer;padding:8px 0;color:var(--green)}.file-locations dt{font-weight:600;margin-top:12px}.file-locations dd{margin:4px 0 0;overflow-wrap:anywhere;font:10px ui-monospace,monospace;line-height:1.6}
 
 .editor-actions{position:sticky;bottom:0;z-index:2;background:var(--surface);border-top:1px solid var(--line);padding:13px 17px;box-shadow:0 -8px 18px #0002}.editor-actions .button{width:100%}.editor-actions .editor-status{margin:0 0 8px}.editor-actions .editor-error{margin:0 0 10px}.editor-actions .field-help{margin-bottom:0}
+
+.stopped-panel{border:1px solid var(--line);border-radius:7px;background:var(--surface);padding:28px;margin-bottom:30px}.stopped-panel h2{margin-top:0}.stopped-panel p{color:var(--muted);line-height:1.7;font-size:14px}body.is-stopped .workspace-footer{margin-top:24px}

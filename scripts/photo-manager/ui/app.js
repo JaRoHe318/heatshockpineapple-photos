@@ -1,6 +1,8 @@
 import { onHomepage, placementChanged, placementForPhoto, withoutDraft } from './editor-state.js';
 const $ = selector => document.querySelector(selector);
 let photos = [], home, revision, token, selectedId = null, baselineHome, busy = false;
+let quitting = false, stopped = false;
+const idleWaiters = new Set();
 const edits = new Map();
 const drafts = new Map();
 let importFiles = [];
@@ -27,12 +29,14 @@ function error(text = '') {
 function photoPending(id) { return Boolean(id) && (drafts.has(id) || edits.has(id) || placementChanged(home, JSON.parse(baselineHome), id)); }
 function setBusy(value) {
   busy = value;
-  for (const id of ['#save','#add','#preview']) $(id).disabled = value || (id === '#save' && !pending());
+  for (const id of ['#save','#add','#preview']) $(id).disabled = value || quitting || stopped || (id === '#save' && !pending());
   $('#save').textContent = value ? 'Working…' : pending() ? 'Save all changes' : 'All changes saved';
-  $('#details-form')?.querySelectorAll('input,textarea').forEach(el => el.disabled = value);
+  $('#quit').disabled = quitting || stopped || !token;
+  $('#details-form')?.querySelectorAll('input,textarea').forEach(el => el.disabled = value || quitting || stopped);
   const photoSave = $('#save-photo');
-  if (photoSave) { photoSave.disabled = value || !photoPending(selectedId); photoSave.textContent = value ? 'Working…' : drafts.has(selectedId) ? 'Save import' : 'Save photo'; }
-  if ($('.remove-draft')) $('.remove-draft').disabled = value;
+  if (photoSave) { photoSave.disabled = value || quitting || stopped || !photoPending(selectedId); photoSave.textContent = value ? 'Working…' : drafts.has(selectedId) ? 'Save import' : 'Save photo'; }
+  if ($('.remove-draft')) $('.remove-draft').disabled = value || quitting || stopped;
+  if (!value) { for (const resolve of idleWaiters) resolve(); idleWaiters.clear(); }
 }
 function updateSave() {
   setBusy(busy);
@@ -101,7 +105,7 @@ function closeDetails() {
   const text = document.createElement('p');text.textContent = 'Select any photo to see it larger and edit its details.'; placeholder.append(title,text);$('#inspector').append(placeholder);renderGrid();error($('#error').textContent);
 }
 function renderDetails(id) {
-  if (busy) return;
+  if (busy || stopped) return;
   const photo = drafts.get(id) || photos.find(p=>p.id === id); if (!photo) return;
   selectedId = id;
   const fragment = $('#details-template').content.cloneNode(true);
@@ -180,7 +184,7 @@ $('#import-form').addEventListener('submit',event=>{
 });
 function readBase64(file) { return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onerror=()=>reject(new Error('Could not read '+file.name));reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.readAsDataURL(file);}); }
 async function saveChanges(onlyId = null) {
-  if (busy) return;
+  if (busy || stopped) return;
   error();
   const pendingEdits = onlyId ? (edits.has(onlyId) ? [edits.get(onlyId)] : []) : [...edits.values()];
   const pendingDrafts = onlyId ? (drafts.has(onlyId) ? [drafts.get(onlyId)] : []) : [...drafts.values()];
@@ -222,6 +226,47 @@ $('#preview').addEventListener('click',async()=>{
   finally{setBusy(false);}
 });
 $('#close-viewer').addEventListener('click',()=>$('#viewer').close());
-window.addEventListener('beforeunload',event=>{if(pending()){event.preventDefault();event.returnValue='';}});
+window.addEventListener('beforeunload',event=>{if(!stopped && pending()){event.preventDefault();event.returnValue='';}});
 document.addEventListener('keydown',event=>{if(event.key==='Escape' && !$('#viewer').open && !$('#import-dialog').open && selectedId)closeDetails();});
 request('/api/library').then(adopt).catch(cause=>{error(cause.message);message('Could not load the library. Check that the local manager is running, then refresh.');});
+
+function showStopped() {
+  stopped = true; quitting = false;
+  for (const dialog of document.querySelectorAll('dialog[open]')) dialog.close();
+  for (const draft of drafts.values()) URL.revokeObjectURL(draft.src);
+  drafts.clear(); edits.clear();
+  for (const selector of ['.workspace','.actions','#notice','#error']) $(selector).hidden = true;
+  $('#manager-stopped').hidden = false;
+  $('.local-badge').textContent = 'MANAGER STOPPED';
+  document.body.classList.add('is-stopped');
+  document.title = 'Photography Manager · Stopped';
+  $('#manager-stopped').focus();
+}
+function keepEditing() {
+  $('#quit-dialog').close(); quitting = false; setBusy(busy); updateSave();
+}
+async function finishQuit() {
+  $('#quit-dialog').close();
+  message('Stopping Photo Manager. Waiting for any active save or preview to finish…');
+  try {
+    await request('/api/quit',{});
+    showStopped();
+  } catch(cause) {
+    quitting = false; setBusy(busy);
+    error('Could not confirm shutdown: '+cause.message);
+    message('Your workspace is still open. You can retry Quit manager.');
+  }
+}
+$('#quit').addEventListener('click',async()=>{
+  if (quitting || stopped) return;
+  quitting = true; error(); setBusy(busy);
+  if (busy) {
+    message('Finishing the current operation before quitting…');
+    await new Promise(resolve=>idleWaiters.add(resolve));
+  }
+  if (pending()) $('#quit-dialog').showModal();
+  else await finishQuit();
+});
+$('#keep-editing').addEventListener('click',keepEditing);
+$('#quit-dialog').addEventListener('cancel',()=>{quitting=false;setBusy(busy);});
+$('#confirm-quit').addEventListener('click',()=>finishQuit());

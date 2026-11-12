@@ -26,7 +26,7 @@ export async function findRunningManager({root,port}) {
     const response = await fetch(url+'/api/health',{signal:AbortSignal.timeout(1500),redirect:'error'});
     if (response.ok) {
       const identity = await response.json();
-      return identity.app === MANAGER_APP && identity.projectId === await projectIdentity(root) ? {url} : null;
+      return identity.app === MANAGER_APP && identity.projectId === await projectIdentity(root) ? {url,stopping:Boolean(identity.stopping)} : null;
     }
     // Older managers lack /api/health. Confirm the exact project process before reusing one.
     if (response.status !== 404 || !(await legacyProcessMatches(root,port))) return null;
@@ -38,6 +38,7 @@ export async function findRunningManager({root,port}) {
 }
 export async function launchManager({root,port=8787,openBrowser=true}) {
   let running = await findRunningManager({root,port});
+  if (running?.stopping) throw new Error("Photo Manager is shutting down. Wait for the current operation to finish, then open it again.");
   let manager;
   if (!running) {
     try { manager = await startManager({root,port}); }
@@ -54,6 +55,7 @@ export async function launchManager({root,port=8787,openBrowser=true}) {
       }
     }
   }
+  if (running?.stopping) throw new Error("Photo Manager is shutting down. Wait for the current operation to finish, then open it again.");
   const url = running?.url || manager.url;
   if (openBrowser && process.platform === 'darwin') {
     try { await exec('/usr/bin/open',[url]); }

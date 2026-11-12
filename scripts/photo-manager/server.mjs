@@ -1,5 +1,6 @@
 import http from 'node:http';
 import fs from 'node:fs/promises';
+import { realpathSync } from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
@@ -22,11 +23,11 @@ async function serve(res, root, rel) {
   } catch (error) { send(res, error.code === 'ENOENT' ? 404 : 400, { error: 'File not found.' }); }
 }
 function listen(server, port) { return new Promise((resolve,reject) => { server.once('error',reject); server.listen(port,'127.0.0.1',resolve); }); }
-async function body(req) {
+async function body(req, maxBytes = 145 * 1024 * 1024) {
   const chunks = []; let bytes = 0;
   for await (const chunk of req) {
     bytes += chunk.length;
-    if (bytes > 145 * 1024 * 1024) throw new LibraryError('This batch is too large. Import fewer images at a time.',413);
+    if (bytes > maxBytes) throw new LibraryError('This batch is too large. Import fewer images at a time.',413);
     chunks.push(chunk);
   }
   try { return JSON.parse(Buffer.concat(chunks).toString('utf8')); }
@@ -38,7 +39,30 @@ export async function startManager({ root, port = 8787, previewPort = 0 } = {}) 
   const projectId = await projectIdentity(root);
   await withLibraryLock(root, () => loadLibrary(root));
   const token = crypto.randomBytes(32).toString('hex');
-  let origin; let busy = false;
+  let origin; let busy = false; let stopping = false; let activeOperations = 0;
+  const idleWaiters = new Set();
+  const idle = () => activeOperations === 0 ? Promise.resolve() : new Promise(resolve => idleWaiters.add(resolve));
+  const finishOperation = () => {
+    activeOperations--;
+    if (activeOperations === 0) { for (const resolve of idleWaiters) resolve(); idleWaiters.clear(); }
+  };
+  let closePromise;
+  let closedResolve;
+  const closed = new Promise(resolve => { closedResolve = resolve; });
+  const closeHTTP = httpServer => new Promise((resolve,reject) => {
+    if (!httpServer.listening) return resolve();
+    httpServer.close(error => error ? reject(error) : resolve());
+    httpServer.closeIdleConnections?.();
+  });
+  async function close() {
+    stopping = true;
+    if (!closePromise) closePromise = (async () => {
+      await idle();
+      await Promise.all([closeHTTP(server),closeHTTP(preview)]);
+      closedResolve();
+    })();
+    return closePromise;
+  }
   const preview = http.createServer(async (req,res) => {
     if (req.headers.host !== `127.0.0.1:${preview.address().port}`) return send(res,403,{error:'Local preview only.'});
     if (!['GET','HEAD'].includes(req.method)) return send(res,405,{error:'Read-only preview.'});
@@ -52,24 +76,35 @@ export async function startManager({ root, port = 8787, previewPort = 0 } = {}) 
     res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' blob:; connect-src 'self'; frame-ancestors 'none'; object-src 'none'; base-uri 'none'; form-action 'self'");
     try {
       const url = new URL(req.url, origin);
-      if (req.method === 'GET' && url.pathname === '/api/health') return send(res,200,{app:MANAGER_APP,projectId,busy});
+      if (req.method === 'GET' && url.pathname === '/api/health') return send(res,200,{app:MANAGER_APP,projectId,busy,stopping,activeOperations});
       if (req.method === 'GET' && url.pathname === '/api/library') return send(res,200,{ ...publicLibrary(await loadLibrary(root)), token });
       if (req.method === 'POST') {
         if (req.headers.origin !== origin || req.headers['x-photo-manager-token'] !== token || req.headers['content-type'] !== 'application/json') throw new LibraryError('This save must come from the local photo manager.',403);
+        if (url.pathname === '/api/quit') {
+          await body(req,1024);
+          stopping = true;
+          await idle();
+          res.once('finish', () => { close().catch(error => console.error('Manager shutdown failed:',error)); });
+          return send(res,200,{stopped:true});
+        }
+        if (stopping) throw new LibraryError('Photo Manager is shutting down. Reopen it after shutdown finishes.',503);
         if (busy) throw new LibraryError('A save or preview build is already running.',409);
         if (!['/api/save','/api/preview'].includes(url.pathname)) throw new LibraryError('Unknown action.',404);
-        const input = await body(req);
-        if (busy) throw new LibraryError('A save or preview build is already running.',409);
-        busy = true;
+        activeOperations++;
         try {
-          return await withLibraryLock(root, async () => {
-            if (url.pathname === '/api/save') return send(res,200,publicLibrary(await saveLibrary(root,input)));
-            try {
-              await exec(process.execPath,[inside(root,'node_modules/astro/astro.js'),'build'],{cwd:root,env:{...process.env,ASTRO_TELEMETRY_DISABLED:'1'},maxBuffer:4*1024*1024,timeout:120000});
-            } catch (error) { console.error(error.stderr || error.message); throw new LibraryError('The website build failed. Your saved photos are safe; check the manager Terminal window for details.',500); }
-            return send(res,200,{ url:`http://127.0.0.1:${preview.address().port}/` });
-          });
-        } finally { busy = false; }
+          const input = await body(req);
+          if (busy) throw new LibraryError('A save or preview build is already running.',409);
+          busy = true;
+          try {
+            return await withLibraryLock(root, async () => {
+              if (url.pathname === '/api/save') return send(res,200,publicLibrary(await saveLibrary(root,input)));
+              try {
+                await exec(process.execPath,[inside(root,'node_modules/astro/astro.js'),'build'],{cwd:root,env:{...process.env,ASTRO_TELEMETRY_DISABLED:'1'},maxBuffer:4*1024*1024,timeout:120000});
+              } catch (error) { console.error(error.stderr || error.message); throw new LibraryError('The website build failed. Your saved photos are safe; check the manager Terminal window for details.',500); }
+              return send(res,200,{ url:`http://127.0.0.1:${preview.address().port}/` });
+            });
+          } finally { busy = false; }
+        } finally { finishOperation(); }
       }
       if (!['GET','HEAD'].includes(req.method)) throw new LibraryError('Method not allowed.',405);
       if (url.pathname.startsWith('/images/')) {
@@ -86,11 +121,23 @@ export async function startManager({ root, port = 8787, previewPort = 0 } = {}) 
   await listen(preview,previewPort);
   try { await listen(server,port); } catch(error) { preview.close(); throw error; }
   origin = `http://127.0.0.1:${server.address().port}`;
-  return { server, preview, url:origin, close: () => Promise.all([new Promise(resolve=>server.close(resolve)),new Promise(resolve=>preview.close(resolve))]) };
+  return { server, preview, url:origin, close, closed };
 }
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  import('./launcher.mjs').then(({launchManager}) => launchManager({root:path.resolve(here,'../..'),port:Number(process.env.PHOTO_MANAGER_PORT || 8787),openBrowser:!process.argv.includes('--no-open')})).then(result => {
-    if (result.reused) console.log(`\n🍍 Photography Manager is already running.\nOpened your existing manager: ${result.url}\nYour running session has been left in place.\n`);
-    else console.log(`\n🍍 Photography Manager\n${result.url}\n\nYour files stay on this Mac. Save locally, then publish with GitHub Desktop.\nKeep this window open; press Control+C to stop.\n`);
+function isEntrypoint() {
+  try { return process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url)); }
+  catch { return false; }
+}
+if (isEntrypoint()) {
+  import('./launcher.mjs').then(({launchManager}) => launchManager({root:path.resolve(here,'../..'),port:Number(process.env.PHOTO_MANAGER_PORT || 8787),openBrowser:!process.argv.includes('--no-open')})).then(async result => {
+    if (result.reused) { console.log(`\n🍍 Photography Manager is already running.\nYour existing manager: ${result.url}\nYour running session has been left in place.\n`); return; }
+    const stop = () => {
+      console.log('Shutting down after active operations finish…');
+      result.manager.close().catch(error => { console.error(error.message); process.exitCode=1; });
+    };
+    for (const event of ['SIGINT','SIGTERM','SIGHUP']) process.on(event,stop);
+    console.log(`\n🍍 Photography Manager\n${result.url}\n\nYour files stay on this Mac. Save locally, then publish with GitHub Desktop.\nChoose Quit manager in the browser, or press Control+C here, to stop.\n`);
+    await result.manager.closed;
+    for (const event of ['SIGINT','SIGTERM','SIGHUP']) process.off(event,stop);
+    console.log('Photography Manager and preview stopped.');
   }).catch(error => { console.error(error.message); process.exitCode=1; });
 }
